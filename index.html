@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#080808">
+  <meta name="description" content="Tivra is a fast, lightweight movie and TV player built for Smart TVs.">
+  <title>Tivra — Watch without the clutter</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app" class="app-container">
+    <header class="app-header">
+      <button type="button" class="brand" onclick="showHomeView()" tabindex="0" aria-label="Tivra home">
+        <span class="brand-mark">T</span><span class="brand-name">Tivra</span>
+      </button>
+      <nav class="header-nav" aria-label="Main navigation">
+        <button type="button" class="nav-tab active" onclick="filterCategory('all')" tabindex="0">Home</button>
+        <button type="button" class="nav-tab" onclick="filterCategory('movie')" tabindex="0">Movies</button>
+        <button type="button" class="nav-tab" onclick="filterCategory('tv')" tabindex="0">Series</button>
+      </nav>
+      <div class="header-search-area">
+        <button type="button" id="headerSearchTrigger" class="header-search-trigger" onclick="focusSearch()" tabindex="0" aria-expanded="false" aria-controls="searchForm"><span aria-hidden="true">⌕</span> Search</button>
+        <form id="searchForm" class="header-search-form hidden" onsubmit="event.preventDefault(); handleSearchSubmit();">
+          <span class="search-icon" aria-hidden="true">⌕</span>
+          <label class="sr-only" for="searchInput">Search movies and TV shows</label>
+          <input type="text" id="searchInput" class="tv-input" placeholder="Search a movie or series…" autocomplete="off" tabindex="0">
+          <button type="submit" id="searchSubmitBtn" class="tv-btn tv-btn-primary tv-btn-sm" tabindex="0">Search</button>
+          <button type="button" class="search-close" onclick="closeHeaderSearch()" tabindex="0" aria-label="Close search">×</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section id="homeView" class="view-section active">
+        <div id="heroSpotlight" class="hero-spotlight">
+          <div class="hero-content">
+            <div class="eyebrow">Tivra selection</div>
+            <h1 id="heroTitle" class="hero-title">Dune: Part Two</h1>
+            <div id="heroMeta" class="hero-meta-row">
+              <span id="heroRating" class="rating">★ 8.5</span><span id="heroYear">2024</span><span id="heroType">Movie</span><span class="quality">4K</span>
+            </div>
+            <p id="heroOverview" class="hero-overview">Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.</p>
+            <div class="hero-actions">
+              <button type="button" id="heroPlayBtn" class="tv-btn tv-btn-primary" tabindex="0">▶&nbsp; Play now</button>
+              <button type="button" id="heroInfoBtn" class="tv-btn tv-btn-secondary" tabindex="0">Search titles</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="continueWatchingSection" class="content-section hidden text-only-section">
+          <div class="section-header"><div><p class="section-kicker">Pick up where you stopped</p><h2 class="section-title">Continue watching</h2></div><button class="tv-btn tv-btn-quiet tv-btn-sm" onclick="clearWatchHistory()">Clear</button></div>
+          <div id="continueWatchingList" class="tv-list"></div>
+        </div>
+
+        <div id="trendingSection" class="content-section">
+          <div class="section-header"><div><p class="section-kicker">A few good choices, nothing more</p><h2 id="sectionHeading" class="section-title">Featured tonight</h2></div><span class="section-subtitle">OK to watch</span></div>
+          <div id="trendingList" class="featured-list"></div>
+        </div>
+        <footer class="home-footer"><span>Built for TV</span><span>Use ▲ ▼ ◀ ▶ to move · OK to select · BACK to return</span></footer>
+      </section>
+
+      <section id="resultsView" class="view-section hidden">
+        <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0">← Home</button><div><p class="section-kicker">Choose a title to start</p><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
+        <div id="resultsList" class="tv-list"></div>
+      </section>
+
+      <section id="tvShowView" class="view-section hidden">
+        <div class="view-nav-header series-view-header">
+          <button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showResultsOrHome()" tabindex="0">← Back</button>
+          <div class="series-heading-copy">
+            <p class="section-kicker">Series library</p>
+            <div class="show-title-wrap"><h2 id="tvShowTitle" class="view-heading">Series title</h2><span id="tvShowMeta" class="meta-tag">TV series</span></div>
+            <div id="tvShowFacts" class="show-facts" aria-label="Series information"></div>
+          </div>
+        </div>
+        <div class="tv-layout-split">
+          <div class="tv-sidebar"><h3 class="panel-subtitle">Seasons</h3><div id="seasonsList" class="tv-list compact-list"></div></div>
+          <div class="tv-main-panel"><h3 id="episodesHeading" class="panel-subtitle">Episodes</h3><div id="episodesList" class="tv-list"></div></div>
+        </div>
+      </section>
+
+      <section id="playerView" class="view-section player-container hidden">
+        <div id="playerControls" class="player-top-bar">
+          <button type="button" id="playerExitBtn" class="tv-btn tv-btn-secondary" onclick="exitPlayer()" tabindex="0">← Exit</button>
+          <span id="playerNowPlayingTitle" class="now-playing-title">Now playing</span>
+          <div class="player-server-select"><label for="serverSelect" class="server-label">Source</label><select id="serverSelect" class="tv-select" onchange="changeServer(this.value)" tabindex="0"><option value="videasy">Primary</option><option value="vidlink">Source 2</option><option value="vidking">Source 3</option><option value="vidsrcto">Source 4</option><option value="vidnest">Source 5</option><option value="vidrock">Source 6</option><option value="vidfast">Source 7</option><option value="2embed">Source 8</option><option value="multiembed">Source 9</option></select></div>
+        </div>
+        <div class="iframe-wrapper"><iframe id="videoIframe" src="about:blank" title="Video player" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe></div>
+      </section>
+    </main>
+    <div id="toastNotification" class="toast hidden" role="status"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

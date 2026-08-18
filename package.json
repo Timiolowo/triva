@@ -1,0 +1,15 @@
+{
+  "name": "tivra-player",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ultra-lightweight TV-optimized movie and TV streaming web player for Smart TV VIDAA browsers",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env.local server.js",
+    "start": "node server.js",
+    "check": "node --check app.js && node --check server.js && node --check api/search.js && node --check api/tv.js && node --check api/_config.js"
+  },
+  "keywords": ["tv", "vidaa", "hisense", "streaming", "tmdb", "minimal"],
+  "author": "",
+  "license": "MIT"
+}
