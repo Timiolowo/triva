@@ -3,40 +3,12 @@
 // Images are limited to the small, hard-coded home catalogue below.
 // ==========================================================================
 
-// ==========================================
-// Built-in Ad & Popup Shield (Brave-Style Protection)
-// ==========================================
-(function initAdShield() {
-  try {
-    // 1. Intercept and kill all popup window creation attempts
-    window.open = function(url, target, features) {
-      console.warn('[AdShield] Blocked popup window:', url);
-      return null;
-    };
-  } catch (e) {}
-
-  // 2. Intercept and block unauthorized new-tab links or click-hijacking
-  document.addEventListener('click', (e) => {
-    const link = closestElement(e.target, 'a');
-    if (link && (link.target === '_blank' || (link.href && link.href.indexOf(window.location.origin) !== 0))) {
-      e.preventDefault();
-      e.stopPropagation();
-      console.warn('[AdShield] Blocked external redirect link click:', link.href);
-    }
-  }, true);
-
-  // 3. Block intrusive alert/confirm/prompt loops from embedded ad scripts
-  window.alert = function(msg) { console.warn('[AdShield] Blocked alert:', msg); };
-  window.confirm = function(msg) { console.warn('[AdShield] Blocked confirm:', msg); return false; };
-  window.prompt = function(msg) { console.warn('[AdShield] Blocked prompt:', msg); return null; };
-})();
-
 // Application State
 const state = {
   currentView: 'home',
   previousView: 'home',
   activeItem: null, // { id, type: 'movie'|'tv', title, year, season, episode, seasonName, episodeName }
-  currentServer: 'videasy', // Videasy is the cleanest, lowest-ad stream server
+  currentServer: 'videasy',
   tvDetails: null,
   activeSeasonNumber: 1,
   trendingRaw: [],
@@ -44,8 +16,13 @@ const state = {
   heroItem: null,
   focusMemory: {},
   apiCache: {},
-  pendingRequests: {}
+  pendingRequests: {},
+  playerControlsTimer: null,
+  lastSearchQuery: ''
 };
+
+const PLAYER_CONTROLS_HIDE_DELAY = 4000;
+const MAX_WATCH_HISTORY = 4;
 
 const FEATURED_TITLES = [
   {
@@ -112,12 +89,14 @@ const STREAM_SERVERS = {
 document.addEventListener('DOMContentLoaded', () => {
   loadWatchHistory();
   loadFeaturedTitles();
+  setupPlayerControlsAutoHide();
   setupRemoteNavigation();
+  setupRouting();
 
   // Focus hero play button initially on boot
   setTimeout(() => {
     const heroBtn = document.getElementById('heroPlayBtn');
-    if (heroBtn) {
+    if (heroBtn && state.currentView === 'home') {
       heroBtn.focus();
     }
   }, 300);
@@ -159,16 +138,136 @@ function switchView(viewName) {
   }, 60);
 }
 
-function showHomeView() {
+function showHomeView(options) {
+  if (!options || !options.skipRoute) setBrowserRoute('/home');
   switchView('home');
 }
 
-function showResultsOrHome() {
+function showResultsOrHome(options) {
   if (document.getElementById('resultsList').children.length > 0) {
+    if ((!options || !options.skipRoute) && state.lastSearchQuery) {
+      setBrowserRoute(`/search?q=${encodeURIComponent(state.lastSearchQuery)}`);
+    }
     switchView('results');
   } else {
-    switchView('home');
+    showHomeView(options);
   }
+}
+
+function setupRouting() {
+  if (!window.history || !window.history.pushState) return;
+  window.addEventListener('popstate', applyRouteFromLocation);
+  applyRouteFromLocation();
+}
+
+function setBrowserRoute(path, item, replace) {
+  if (!window.history || !window.history.pushState) return;
+  const currentPath = window.location.pathname + window.location.search;
+  const method = replace || currentPath === path ? 'replaceState' : 'pushState';
+  window.history[method]({ tivra: true, item: item || state.activeItem }, '', path);
+}
+
+function applyRouteFromLocation() {
+  const path = window.location.pathname.replace(/\/+$/, '') || '/';
+  const searchQuery = getQueryParam('q');
+  let match;
+
+  if (state.currentView === 'player' && path.indexOf('/watch/') !== 0 && path.indexOf('/movie/') !== 0) {
+    stopPlayer();
+  }
+
+  if (path === '/' || path === '/home') {
+    if (path === '/') setBrowserRoute('/home', null, true);
+    showHomeView({ skipRoute: true });
+    return;
+  }
+
+  if (path === '/search' && searchQuery) {
+    const input = document.getElementById('searchInput');
+    if (input) input.value = searchQuery;
+    handleSearchSubmit({ skipRoute: true });
+    return;
+  }
+
+  match = path.match(/^\/tv\/(\d+)(?:\/[^/]+)?$/);
+  if (match) {
+    const tvItem = findRouteItem('tv', Number(match[1]));
+    state.activeItem = tvItem;
+    loadTvShowDetails(tvItem.id, tvItem.title, tvItem.year, { skipRoute: true });
+    return;
+  }
+
+  match = path.match(/^\/watch\/tv\/(\d+)\/(\d+)\/(\d+)(?:\/[^/]+)?$/);
+  if (match) {
+    const tvEpisode = findRouteItem('tv', Number(match[1]), Number(match[2]), Number(match[3]));
+    startPlayback(tvEpisode, { skipRoute: true });
+    return;
+  }
+
+  match = path.match(/^\/(?:watch\/)?movie\/(\d+)(?:\/[^/]+)?$/);
+  if (match) {
+    const movie = findRouteItem('movie', Number(match[1]));
+    startPlayback(movie, { skipRoute: true });
+    return;
+  }
+
+  setBrowserRoute('/home', null, true);
+  showHomeView({ skipRoute: true });
+}
+
+function getQueryParam(name) {
+  const match = window.location.search.match(new RegExp(`[?&]${name}=([^&]*)`));
+  if (!match) return '';
+  try {
+    return decodeURIComponent(match[1].replace(/\+/g, ' '));
+  } catch (error) {
+    return '';
+  }
+}
+
+function findRouteItem(type, id, season, episode) {
+  const routeState = window.history && window.history.state;
+  if (routeState && routeState.item && routeState.item.type === type && Number(routeState.item.id) === id) {
+    return Object.assign({}, routeState.item, season ? { season, episode } : {});
+  }
+
+  let featured = null;
+  for (let index = 0; index < FEATURED_TITLES.length; index += 1) {
+    if (FEATURED_TITLES[index].type === type && Number(FEATURED_TITLES[index].id) === id) {
+      featured = FEATURED_TITLES[index];
+      break;
+    }
+  }
+  if (featured) return Object.assign({}, featured, season ? { season, episode } : {});
+
+  try {
+    const historyItems = JSON.parse(localStorage.getItem('litetv_history') || '[]');
+    let saved = null;
+    for (let index = 0; index < historyItems.length; index += 1) {
+      if (historyItems[index].type === type && Number(historyItems[index].id) === id) {
+        saved = historyItems[index];
+        break;
+      }
+    }
+    if (saved) return Object.assign({}, saved, season ? { season, episode } : {});
+  } catch (error) {}
+
+  return {
+    id,
+    type,
+    title: type === 'tv' ? 'TV Series' : 'Movie',
+    year: '',
+    season,
+    episode,
+    episodeName: episode ? `Episode ${episode}` : ''
+  };
+}
+
+function slugifyTitle(title) {
+  return String(title || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'title';
 }
 
 function focusFirstInView(viewName) {
@@ -346,10 +445,14 @@ function renderFeaturedList(container, items) {
   });
 }
 
-async function handleSearchSubmit() {
+async function handleSearchSubmit(options) {
   const input = document.getElementById('searchInput');
   const query = (input ? input.value : '').trim();
   if (!query) return;
+  state.lastSearchQuery = query;
+  if (!options || !options.skipRoute) {
+    setBrowserRoute(`/search?q=${encodeURIComponent(query)}`);
+  }
 
   const resultsList = document.getElementById('resultsList');
   const heading = document.getElementById('resultsHeading');
@@ -431,7 +534,10 @@ function handleItemSelect(item) {
   }
 }
 
-async function loadTvShowDetails(tvId, title, year) {
+async function loadTvShowDetails(tvId, title, year, options) {
+  if (!options || !options.skipRoute) {
+    setBrowserRoute(`/tv/${tvId}/${slugifyTitle(title)}`, state.activeItem);
+  }
   switchView('tvShow');
   document.getElementById('tvShowTitle').textContent = title;
   document.getElementById('tvShowMeta').textContent = `${year ? year + ' · ' : ''}TV Series`;
@@ -565,8 +671,17 @@ function renderShowFacts(data) {
 // ==========================================
 // Video Playback & Server Management
 // ==========================================
-function startPlayback(item) {
+function startPlayback(item, options) {
   state.activeItem = item;
+  state.currentServer = 'videasy';
+  const serverSelect = document.getElementById('serverSelect');
+  if (serverSelect) serverSelect.value = 'videasy';
+  if (!options || !options.skipRoute) {
+    const route = item.type === 'tv'
+      ? `/watch/tv/${item.id}/${item.season}/${item.episode}/${slugifyTitle(item.title)}`
+      : `/watch/movie/${item.id}/${slugifyTitle(item.title)}`;
+    setBrowserRoute(route, item);
+  }
   switchView('player');
 
   const titleEl = document.getElementById('playerNowPlayingTitle');
@@ -581,6 +696,7 @@ function startPlayback(item) {
 
   // Load iframe stream
   updatePlayerIframe();
+  showPlayerControls();
 
   // Focus exit button by default
   setTimeout(() => {
@@ -590,14 +706,28 @@ function startPlayback(item) {
 }
 
 function updatePlayerIframe() {
-  const iframe = document.getElementById('videoIframe');
-  if (!iframe || !state.activeItem) return;
+  if (!state.activeItem) return;
 
   const { type, id, season, episode } = state.activeItem;
   const resolver = STREAM_SERVERS[state.currentServer] || STREAM_SERVERS.videasy;
   const streamUrl = resolver(type, id, season || 1, episode || 1);
 
-  iframe.src = streamUrl;
+  replacePlayerIframe(streamUrl);
+}
+
+function replacePlayerIframe(src) {
+  const currentIframe = document.getElementById('videoIframe');
+  if (!currentIframe || !currentIframe.parentNode) return;
+
+  const nextIframe = document.createElement('iframe');
+  nextIframe.id = 'videoIframe';
+  nextIframe.title = 'Video player';
+  nextIframe.allowFullscreen = true;
+  nextIframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen; picture-in-picture');
+  nextIframe.src = src;
+
+  currentIframe.src = 'about:blank';
+  currentIframe.parentNode.replaceChild(nextIframe, currentIframe);
 }
 
 function changeServer(newServer) {
@@ -605,22 +735,77 @@ function changeServer(newServer) {
     state.currentServer = newServer;
     showToast(`Switched server to ${newServer}`);
     updatePlayerIframe();
+    showPlayerControls();
   }
 }
 
 function exitPlayer() {
-  const iframe = document.getElementById('videoIframe');
-  if (iframe) {
-    iframe.src = 'about:blank'; // Stop audio/video completely
-  }
-  
-  if (state.activeItem && state.activeItem.type === 'tv') {
-    switchView('tvShow');
-  } else if (document.getElementById('resultsList').children.length > 0) {
+  const item = state.activeItem;
+  stopPlayer();
+
+  if (item && item.type === 'tv') {
+    setBrowserRoute(`/tv/${item.id}/${slugifyTitle(item.title)}`, item);
+    loadTvShowDetails(item.id, item.title, item.year, { skipRoute: true });
+  } else if (document.getElementById('resultsList').children.length > 0 && state.lastSearchQuery) {
+    setBrowserRoute(`/search?q=${encodeURIComponent(state.lastSearchQuery)}`, item);
     switchView('results');
   } else {
-    switchView('home');
+    showHomeView();
   }
+}
+
+function stopPlayer() {
+  clearTimeout(state.playerControlsTimer);
+  state.playerControlsTimer = null;
+  const controls = document.getElementById('playerControls');
+  const playerView = document.getElementById('playerView');
+  if (controls) controls.classList.remove('controls-hidden');
+  if (playerView) playerView.classList.remove('controls-hidden');
+  replacePlayerIframe('about:blank');
+}
+
+function setupPlayerControlsAutoHide() {
+  document.addEventListener('keydown', event => {
+    if (state.currentView !== 'player') return;
+
+    const controls = document.getElementById('playerControls');
+    const wasHidden = controls && controls.classList.contains('controls-hidden');
+    const action = getRemoteAction(event);
+    showPlayerControls();
+
+    if (wasHidden && (action === 'ok' || (action && action.indexOf('Arrow') === 0))) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const exitButton = document.getElementById('playerExitBtn');
+      if (exitButton) exitButton.focus();
+    }
+  }, true);
+
+  ['mousemove', 'mousedown', 'touchstart'].forEach(eventName => {
+    document.addEventListener(eventName, () => {
+      if (state.currentView === 'player') showPlayerControls();
+    }, false);
+  });
+}
+
+function showPlayerControls() {
+  if (state.currentView !== 'player') return;
+
+  const controls = document.getElementById('playerControls');
+  const playerView = document.getElementById('playerView');
+  if (!controls) return;
+  controls.classList.remove('controls-hidden');
+  if (playerView) playerView.classList.remove('controls-hidden');
+  clearTimeout(state.playerControlsTimer);
+  state.playerControlsTimer = setTimeout(hidePlayerControls, PLAYER_CONTROLS_HIDE_DELAY);
+}
+
+function hidePlayerControls() {
+  if (state.currentView !== 'player') return;
+  const controls = document.getElementById('playerControls');
+  const playerView = document.getElementById('playerView');
+  if (controls) controls.classList.add('controls-hidden');
+  if (playerView) playerView.classList.add('controls-hidden');
 }
 
 // ==========================================
@@ -633,7 +818,11 @@ function loadWatchHistory() {
 
   try {
     const raw = localStorage.getItem('litetv_history');
-    const list = raw ? JSON.parse(raw) : [];
+    let list = raw ? JSON.parse(raw) : [];
+    if (list.length > MAX_WATCH_HISTORY) {
+      list = list.slice(0, MAX_WATCH_HISTORY);
+      localStorage.setItem('litetv_history', JSON.stringify(list));
+    }
     
     if (list.length === 0) {
       section.classList.add('hidden');
@@ -643,7 +832,7 @@ function loadWatchHistory() {
     section.classList.remove('hidden');
     container.innerHTML = '';
 
-    list.slice(0, 6).forEach(item => {
+    list.forEach(item => {
       const btn = document.createElement('button');
       btn.className = 'tv-item';
       btn.tabIndex = 0;
@@ -691,7 +880,7 @@ function saveToWatchHistory(item) {
       timestamp: Date.now()
     });
 
-    localStorage.setItem('litetv_history', JSON.stringify(list.slice(0, 15)));
+    localStorage.setItem('litetv_history', JSON.stringify(list.slice(0, MAX_WATCH_HISTORY)));
     loadWatchHistory();
   } catch (e) {}
 }

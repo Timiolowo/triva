@@ -7,6 +7,13 @@
       "maxDuration": 10
     }
   },
+  "rewrites": [
+    { "source": "/home", "destination": "/index.html" },
+    { "source": "/search", "destination": "/index.html" },
+    { "source": "/movie/:path*", "destination": "/index.html" },
+    { "source": "/tv/:path*", "destination": "/index.html" },
+    { "source": "/watch/:path*", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/app.js",

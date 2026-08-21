@@ -91,7 +91,10 @@ button { cursor: pointer; }
 .tv-sidebar .tv-list, .tv-main-panel .tv-list { grid-template-columns: 1fr; }
 .active-season { border-color: var(--accent); }
 .player-container { position: fixed; inset: 0; z-index: 100; padding: 0 !important; background: #000; }
-.player-top-bar { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 24px; position: absolute; inset: 0 0 auto; z-index: 2; padding: 16px 30px 26px; background: linear-gradient(180deg, rgba(0,0,0,.94), transparent); }
+.player-container.controls-hidden { cursor: none; }
+.player-container.controls-hidden::after { content: ""; position: absolute; inset: 0; z-index: 1; background: transparent; }
+.player-top-bar { min-height: 82px; display: flex; align-items: center; justify-content: space-between; gap: 24px; position: absolute; inset: 0 0 auto; z-index: 2; padding: 16px 30px 26px; background: linear-gradient(180deg, rgba(0,0,0,.94), transparent); opacity: 1; transform: translateY(0); transition: opacity .2s ease, transform .2s ease; }
+.player-top-bar.controls-hidden { opacity: 0; transform: translateY(-18px); pointer-events: none; }
 .now-playing-title { font-size: 16px; font-weight: 750; }
 .player-server-select { display: flex; align-items: center; gap: 8px; }
 .server-label { color: var(--muted); font-size: 12px; }
