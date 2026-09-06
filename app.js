@@ -1120,8 +1120,16 @@ async function loadNativeStream(item) {
 
   } catch (err) {
     console.warn('[Native playback failed]', err.message);
-    if (loadingOverlay) loadingOverlay.classList.add('hidden');
-    triggerStreamFallback(err.message || 'Ad-free stream unavailable for this title.');
+    if (loadingText) loadingText.textContent = 'Retrying ad-free stream…';
+    triggerStreamFallback('Stream issue encountered');
+    if (!state.nativeRetryTimer) {
+      state.nativeRetryTimer = setTimeout(() => {
+        state.nativeRetryTimer = null;
+        if (state.playerMode === 'native' && state.activeItem && state.activeItem.id === item.id) {
+          loadNativeStream(state.activeItem);
+        }
+      }, 4000);
+    }
   }
 }
 
@@ -2101,27 +2109,39 @@ function switchToNativeMode() {
   showToast('Switched to Ad-Free player');
 }
 
+let fallbackDismissTimer = null;
+
 function triggerStreamFallback(reason) {
   if (state.playerMode !== 'native') return;
   const overlay = document.getElementById('streamFallbackOverlay');
-  if (!overlay) {
-    showToast('Ad-free stream unavailable');
-    return;
+  if (!overlay) return;
+
+  const msgEl = document.getElementById('fallbackMessage');
+  if (msgEl) {
+    msgEl.textContent = reason && reason.length < 35 ? reason : 'Backup player available';
   }
-  if (!overlay.classList.contains('hidden')) return;
 
-  const bufferingEl = document.getElementById('playerBufferingIndicator');
-  if (bufferingEl) bufferingEl.classList.add('hidden');
-  const loadingOverlay = document.getElementById('playerLoadingOverlay');
-  if (loadingOverlay) loadingOverlay.classList.add('hidden');
+  // Clear previous auto-dismiss timer if already active
+  if (fallbackDismissTimer) {
+    clearTimeout(fallbackDismissTimer);
+    fallbackDismissTimer = null;
+  }
 
-  const switchBtn = document.getElementById('fallbackSwitchBtn');
-
+  // Reveal small notification pill without hiding loading overlay or buffering indicators
   overlay.classList.remove('hidden');
-  if (switchBtn) switchBtn.focus();
+
+  // Small formation that leaves after 5 seconds without stopping the stream from loading
+  fallbackDismissTimer = setTimeout(() => {
+    overlay.classList.add('hidden');
+    fallbackDismissTimer = null;
+  }, 5000);
 }
 
 function confirmStreamFallback() {
+  if (fallbackDismissTimer) {
+    clearTimeout(fallbackDismissTimer);
+    fallbackDismissTimer = null;
+  }
   const overlay = document.getElementById('streamFallbackOverlay');
   if (overlay) overlay.classList.add('hidden');
   switchToEmbedMode(true);
@@ -2129,29 +2149,12 @@ function confirmStreamFallback() {
 }
 
 function cancelStreamFallback() {
+  if (fallbackDismissTimer) {
+    clearTimeout(fallbackDismissTimer);
+    fallbackDismissTimer = null;
+  }
   const overlay = document.getElementById('streamFallbackOverlay');
   if (overlay) overlay.classList.add('hidden');
-
-  // Keep trying to load the current stream without exiting the player page
-  const loadingOverlay = document.getElementById('playerLoadingOverlay');
-  const loadingText = document.getElementById('playerLoadingText');
-  const bufferingEl = document.getElementById('playerBufferingIndicator');
-
-  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
-  if (loadingText) loadingText.textContent = 'Retrying stream…';
-  if (bufferingEl) bufferingEl.classList.remove('hidden');
-
-  showToast('Retrying stream…');
-
-  if (state.activeItem) {
-    if (state.hlsInstance) {
-      try {
-        state.hlsInstance.startLoad();
-      } catch (e) {}
-    } else {
-      loadNativeStream(state.activeItem);
-    }
-  }
 }
 
 window.triggerStreamFallback = triggerStreamFallback;
@@ -2220,6 +2223,14 @@ function stopPlayer() {
   clearInterval(state.stallWatchdogTimer);
   state.stallWatchdogTimer = null;
   closeSettingsDrawer();
+  if (fallbackDismissTimer) {
+    clearTimeout(fallbackDismissTimer);
+    fallbackDismissTimer = null;
+  }
+  if (state.nativeRetryTimer) {
+    clearTimeout(state.nativeRetryTimer);
+    state.nativeRetryTimer = null;
+  }
   const fallbackOverlay = document.getElementById('streamFallbackOverlay');
   if (fallbackOverlay) fallbackOverlay.classList.add('hidden');
 

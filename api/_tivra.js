@@ -74,6 +74,13 @@ async function getEngine() {
     WebAssembly,
     exports: {},
     module: { exports: {} },
+    require: (typeof require !== 'undefined' ? require : () => ({})),
+    Buffer: typeof Buffer !== 'undefined' ? Buffer : undefined,
+    process: typeof process !== 'undefined' ? process : { env: {} },
+    setTimeout,
+    clearTimeout,
+    setInterval,
+    clearInterval,
     fetch: async (url, opts = {}) => {
       if (url.endsWith('/crush.wasm')) {
         return new Response(wasmBuffer, {

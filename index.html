@@ -360,17 +360,19 @@
           <iframe id="videoIframe" src="about:blank" title="Video player" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
         </div>
 
-        <!-- Stream failure warning: switching players always requires confirmation. -->
-        <div id="streamFallbackOverlay" class="stream-fallback-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="fallbackTitle">
-          <div class="stream-fallback-card">
-            <div class="fallback-icon">
+        <!-- Stream fallback notification (compact toast pill that leaves after 5s) -->
+        <div id="streamFallbackOverlay" class="stream-fallback-pill hidden" role="status" aria-live="polite">
+          <div class="fallback-pill-content">
+            <div class="fallback-pill-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-            <h3 id="fallbackTitle" class="fallback-title">Ad-Free Stream Unavailable</h3>
-            <p id="fallbackMessage" class="fallback-message">This stream could not be loaded. You can switch to the backup player or cancel.</p>
-            <div class="fallback-actions">
-              <button type="button" id="fallbackSwitchBtn" class="tv-btn tv-btn-primary hud-btn-round" onclick="confirmStreamFallback()" tabindex="0">Switch to Backup</button>
-              <button type="button" id="fallbackCancelBtn" class="tv-btn tv-btn-secondary hud-btn-round" onclick="cancelStreamFallback()" tabindex="0">Cancel</button>
+            <div class="fallback-pill-info">
+              <span id="fallbackTitle" class="fallback-pill-title">Stream issue detected</span>
+              <span id="fallbackMessage" class="fallback-pill-sub">Backup player available</span>
+            </div>
+            <div class="fallback-pill-actions">
+              <button type="button" id="fallbackSwitchBtn" class="fallback-action-btn" onclick="confirmStreamFallback()" tabindex="0">Switch to Backup</button>
+              <button type="button" id="fallbackCancelBtn" class="fallback-close-btn" onclick="cancelStreamFallback()" tabindex="0" aria-label="Dismiss">✕</button>
             </div>
           </div>
         </div>
@@ -388,6 +390,6 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/app.js?v=32"></script>
+  <script src="/app.js?v=33"></script>
 </body>
 </html>

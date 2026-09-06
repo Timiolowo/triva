@@ -6,7 +6,8 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 20,
-      "includeFiles": "api/vendor/**"
+      "includeFiles": "api/vendor/**",
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
