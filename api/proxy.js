@@ -24,6 +24,45 @@ function rewriteM3u8(content, baseUrl, proxyBase) {
   return res;
 }
 
+function detectMediaMime(targetUrl, buffer, upstreamContentType) {
+  const urlLower = targetUrl.toLowerCase();
+
+  if (urlLower.includes('.m3u8') || (upstreamContentType && upstreamContentType.includes('mpegurl'))) {
+    return 'application/vnd.apple.mpegurl; charset=utf-8';
+  }
+  if (urlLower.includes('.vtt') || (upstreamContentType && upstreamContentType.includes('text/vtt'))) {
+    return 'text/vtt; charset=utf-8';
+  }
+
+  // Check binary magic bytes when buffer is present
+  if (buffer && buffer.length >= 8) {
+    const boxType = buffer.toString('ascii', 4, 8);
+    if (boxType === 'ftyp' || boxType === 'moof' || boxType === 'moov' || boxType === 'styp') {
+      return urlLower.includes('audio') ? 'audio/mp4' : 'video/mp4';
+    }
+    if (buffer[0] === 0x47) {
+      return 'video/mp2t';
+    }
+    if (buffer.length >= 6 && buffer.toString('ascii', 0, 6) === 'WEBVTT') {
+      return 'text/vtt; charset=utf-8';
+    }
+  }
+
+  // Path heuristics when buffer is unavailable (e.g. HEAD requests)
+  if (urlLower.includes('audio')) {
+    return 'audio/mp4';
+  }
+  if (urlLower.includes('video') || urlLower.includes('.ts') || urlLower.includes('.m4s') || urlLower.includes('.mp4')) {
+    return 'video/mp4';
+  }
+
+  if (upstreamContentType && !upstreamContentType.includes('text/html') && !upstreamContentType.includes('text/plain')) {
+    return upstreamContentType;
+  }
+
+  return 'video/mp4';
+}
+
 module.exports = async function handler(req, res) {
   // Global CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -65,6 +104,25 @@ module.exports = async function handler(req, res) {
     const contentType = response.headers.get('content-type') || '';
     const isPlaylist = targetUrl.includes('.m3u8') || contentType.includes('mpegurl');
 
+    // Handle HEAD requests directly from upstream headers
+    if (req.method === 'HEAD') {
+      const mime = isPlaylist ? 'application/vnd.apple.mpegurl; charset=utf-8' : detectMediaMime(targetUrl, null, contentType);
+      res.status(response.status);
+      res.setHeader('Content-Type', mime);
+      const upstreamLength = response.headers.get('content-length');
+      if (upstreamLength) {
+        res.setHeader('Content-Length', upstreamLength);
+      }
+      if (response.headers.get('content-range')) {
+        res.setHeader('Content-Range', response.headers.get('content-range'));
+      }
+      if (response.headers.get('accept-ranges')) {
+        res.setHeader('Accept-Ranges', response.headers.get('accept-ranges'));
+      }
+      res.setHeader('Cache-Control', isPlaylist ? 'public, max-age=60, stale-while-revalidate=300' : 'public, max-age=86400, immutable');
+      return res.end();
+    }
+
     if (isPlaylist) {
       const rawText = await response.text();
       const rewritten = rewriteM3u8(rawText, targetUrl, '/api/proxy');
@@ -74,11 +132,12 @@ module.exports = async function handler(req, res) {
       res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
       return res.end(rewritten);
     } else {
-      // Media segment chunk (.ts, .html disguised chunks, .vtt)
+      // Media segment chunk (.ts, disguised .html chunks, .vtt)
       const buffer = Buffer.from(await response.arrayBuffer());
+      const mime = detectMediaMime(targetUrl, buffer, contentType);
 
       res.status(response.status);
-      res.setHeader('Content-Type', contentType || 'video/mp2t');
+      res.setHeader('Content-Type', mime);
 
       if (response.headers.get('content-range')) {
         res.setHeader('Content-Range', response.headers.get('content-range'));

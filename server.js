@@ -42,24 +42,30 @@ const server = http.createServer(async (req, res) => {
     return this;
   };
 
-  // API Routes
+  // API Routes (dynamically loaded so changes take effect without server restart)
   if (pathname === '/api/search' || pathname === '/api/search.js') {
-    return searchHandler(req, res);
+    delete require.cache[require.resolve('./api/search.js')];
+    return require('./api/search.js')(req, res);
   }
   if (pathname === '/api/tv' || pathname === '/api/tv.js') {
-    return tvHandler(req, res);
+    delete require.cache[require.resolve('./api/tv.js')];
+    return require('./api/tv.js')(req, res);
   }
   if (pathname === '/api/trending' || pathname === '/api/trending.js') {
-    return trendingHandler(req, res);
+    delete require.cache[require.resolve('./api/trending.js')];
+    return require('./api/trending.js')(req, res);
   }
   if (pathname === '/api/source' || pathname === '/api/source.js') {
-    return sourceHandler(req, res);
+    delete require.cache[require.resolve('./api/source.js')];
+    return require('./api/source.js')(req, res);
   }
   if (pathname === '/api/proxy' || pathname === '/api/proxy.js') {
-    return proxyHandler(req, res);
+    delete require.cache[require.resolve('./api/proxy.js')];
+    return require('./api/proxy.js')(req, res);
   }
   if (pathname === '/api/subtitles' || pathname === '/api/subtitles.js') {
-    return subtitlesHandler(req, res);
+    delete require.cache[require.resolve('./api/subtitles.js')];
+    return require('./api/subtitles.js')(req, res);
   }
   // Static File Serving
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);

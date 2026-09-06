@@ -6,6 +6,23 @@ let cachedEngine = null;
 let lastInitTime = 0;
 const ENGINE_CACHE_TTL = 3600 * 1000; // 1 hour
 
+function findVendorFile(filename) {
+  const candidates = [
+    path.join(__dirname, 'vendor', filename),
+    path.join(__dirname, 'api', 'vendor', filename),
+    path.join(process.cwd(), 'api', 'vendor', filename),
+    path.join(process.cwd(), 'vendor', filename),
+    path.resolve('api', 'vendor', filename),
+    path.resolve('vendor', filename)
+  ];
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch (e) {}
+  }
+  return null;
+}
+
 async function getEngine() {
   const now = Date.now();
   if (cachedEngine && (now - lastInitTime < ENGINE_CACHE_TTL)) {
@@ -14,8 +31,8 @@ async function getEngine() {
 
   // 1. Fetch or load resolver chunk
   let code = '';
-  const localChunk = path.join(__dirname, 'vendor', 'Cd3QBhFG.js');
-  if (fs.existsSync(localChunk)) {
+  const localChunk = findVendorFile('Cd3QBhFG.js');
+  if (localChunk) {
     code = fs.readFileSync(localChunk, 'utf8');
   } else {
     const chunkUrl = 'https://cinejoy.to/_app/immutable/chunks/Cd3QBhFG.js';
@@ -29,8 +46,8 @@ async function getEngine() {
 
   // 2. Fetch or load WebAssembly crypto module
   let wasmBuffer;
-  const localWasm = path.join(__dirname, 'vendor', 'crush.wasm');
-  if (fs.existsSync(localWasm)) {
+  const localWasm = findVendorFile('crush.wasm');
+  if (localWasm) {
     const buf = fs.readFileSync(localWasm);
     wasmBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   } else {
@@ -54,6 +71,9 @@ async function getEngine() {
     Uint8Array,
     ArrayBuffer,
     URLSearchParams,
+    WebAssembly,
+    exports: {},
+    module: { exports: {} },
     fetch: async (url, opts = {}) => {
       if (url.endsWith('/crush.wasm')) {
         return new Response(wasmBuffer, {
@@ -74,6 +94,10 @@ async function getEngine() {
     B: () => ({}),
     CW: () => ({})
   };
+
+  ctx.window = ctx;
+  ctx.global = ctx;
+  ctx.globalThis = ctx;
 
   vm.createContext(ctx);
   vm.runInContext(code, ctx);

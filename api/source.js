@@ -54,7 +54,7 @@ module.exports = async function handler(req, res) {
       subtitles
     });
   } catch (err) {
-    console.error('[API/SOURCE ERROR]', err.message);
+    console.error('[API/SOURCE ERROR]', err.message, err.stack);
     return res.status(500).json({
       success: false,
       error: 'Failed to resolve stream: ' + err.message

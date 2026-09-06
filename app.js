@@ -2128,11 +2128,29 @@ function confirmStreamFallback() {
   showToast('Switched to backup player');
 }
 
-function cancelStreamFallback(preventExit = false) {
+function cancelStreamFallback() {
   const overlay = document.getElementById('streamFallbackOverlay');
   if (overlay) overlay.classList.add('hidden');
-  if (!preventExit) {
-    exitPlayer();
+
+  // Keep trying to load the current stream without exiting the player page
+  const loadingOverlay = document.getElementById('playerLoadingOverlay');
+  const loadingText = document.getElementById('playerLoadingText');
+  const bufferingEl = document.getElementById('playerBufferingIndicator');
+
+  if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+  if (loadingText) loadingText.textContent = 'Retrying stream…';
+  if (bufferingEl) bufferingEl.classList.remove('hidden');
+
+  showToast('Retrying stream…');
+
+  if (state.activeItem) {
+    if (state.hlsInstance) {
+      try {
+        state.hlsInstance.startLoad();
+      } catch (e) {}
+    } else {
+      loadNativeStream(state.activeItem);
+    }
   }
 }
 
@@ -2202,7 +2220,8 @@ function stopPlayer() {
   clearInterval(state.stallWatchdogTimer);
   state.stallWatchdogTimer = null;
   closeSettingsDrawer();
-  cancelStreamFallback(true);
+  const fallbackOverlay = document.getElementById('streamFallbackOverlay');
+  if (fallbackOverlay) fallbackOverlay.classList.add('hidden');
 
   const bufferingEl = document.getElementById('playerBufferingIndicator');
   if (bufferingEl) bufferingEl.classList.add('hidden');
