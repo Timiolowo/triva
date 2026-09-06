@@ -31,7 +31,7 @@ async function getEngine() {
 
   // 1. Fetch or load resolver chunk
   let code = '';
-  const localChunk = findVendorFile('Cd3QBhFG.js');
+  const localChunk = findVendorFile('Cd3QBhFG.bundle') || findVendorFile('Cd3QBhFG.js');
   if (localChunk) {
     code = fs.readFileSync(localChunk, 'utf8');
   } else {
@@ -59,7 +59,15 @@ async function getEngine() {
   }
 
   // 3. Setup sandbox context mimicking browser environment
-  const dummyProxy = new Proxy({}, { get: () => () => ({}) });
+  const createRecursiveProxy = () => {
+    const fn = () => createRecursiveProxy();
+    return new Proxy(fn, {
+      get: () => createRecursiveProxy(),
+      apply: () => createRecursiveProxy()
+    });
+  };
+  const dummyProxy = createRecursiveProxy();
+
   const ctx = {
     console: { log: () => {}, warn: () => {}, error: () => {} },
     navigator: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
@@ -104,7 +112,7 @@ async function getEngine() {
         }
       });
     },
-    b: new Proxy({}, { get: () => () => ({}) }),
+    b: dummyProxy,
     B: () => ({}),
     CW: () => ({})
   };
