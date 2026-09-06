@@ -5,7 +5,8 @@
   "outputDirectory": ".",
   "functions": {
     "api/*.js": {
-      "maxDuration": 20
+      "maxDuration": 20,
+      "includeFiles": "api/vendor/**"
     }
   },
   "rewrites": [

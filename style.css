@@ -467,6 +467,7 @@ body.modal-open { overflow: hidden; }
 .hud-btn-circle svg { width: 18px; height: 18px; display: block; margin: auto; }
 .hud-btn-round svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px; }
 .hud-btn-icon svg { width: 18px; height: 18px; display: block; margin: auto; }
+#playerRotateBtn { display: none; }
 .back-btn { border-radius: 20px !important; padding: 8px 16px !important; font-size: 13px !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(255, 255, 255, 0.08) !important; border: 1px solid rgba(255, 255, 255, 0.18) !important; color: var(--text) !important; transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease; }
 .back-btn:hover, .back-btn:focus { background: rgba(255, 255, 255, 0.16) !important; border-color: rgba(255, 255, 255, 0.32) !important; color: #fff !important; }
 .back-btn svg { width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 6px; }
@@ -480,6 +481,9 @@ body.modal-open { overflow: hidden; }
 .choice-check { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; color: var(--accent); }
 .choice-check svg { width: 17px; height: 17px; }
 .choice-meta { font-size: 11px; color: var(--muted); margin-left: 6px; font-weight: normal; }
+.drawer-notice-box { padding: 14px 16px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 8px; }
+.drawer-notice-title { font-size: 13px; font-weight: 700; color: var(--accent); margin: 0 0 6px; }
+.drawer-notice-desc { font-size: 12px; line-height: 1.5; color: var(--muted); margin: 0; }
 
 /* Subtitle Tabs & Search */
 .drawer-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; }
@@ -791,11 +795,49 @@ body.modal-open { overflow: hidden; }
   .player-timeline-wrap { order: -1; flex-basis: 100%; margin: 0 2px 5px; }
   .hud-inline-left, .hud-inline-right { gap: 8px; }
   .hud-inline-right { margin-left: auto; }
-  #playerRewindBtn, #playerForwardBtn { display: none !important; }
+  #playerRewindBtn, #playerForwardBtn, #playerNextEpBtn { display: none !important; }
+  #playerRotateBtn { display: grid !important; }
   #playerSettingsBtn { width: 40px; height: 40px; min-height: 40px; padding: 0 !important; border-radius: 50% !important; font-size: 0 !important; }
   #playerSettingsBtn svg { width: 18px; height: 18px; margin: auto; }
   .hud-btn-round { padding-inline: 10px !important; font-size: 12px !important; }
   .player-settings-drawer { width: 100%; border-left: 0; }
+}
+
+/* Phone landscape: use the full rotated viewport and keep controls on one compact row. */
+@media (orientation: landscape) and (pointer: coarse) and (max-height: 600px) {
+  .player-container { width: 100dvw; height: 100dvh; }
+  .player-top-bar { min-height: 52px; padding: calc(6px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left)); }
+  .player-hud-overlay { padding: 10px calc(12px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left)); }
+  .player-unified-bar { flex-wrap: nowrap; gap: 10px; }
+  .player-timeline-wrap { order: 0; flex: 1 1 auto; flex-basis: auto; margin: 0; }
+  .hud-inline-left, .hud-inline-right { gap: 7px; }
+  #playerRewindBtn, #playerForwardBtn, #playerNextEpBtn { display: none !important; }
+  #playerRotateBtn { display: grid !important; }
+  #playerSettingsBtn { width: 38px; height: 38px; min-height: 38px; padding: 0 !important; border-radius: 50% !important; font-size: 0 !important; }
+  #playerSettingsBtn svg { width: 17px; height: 17px; margin: auto; }
+  .player-settings-drawer { width: min(360px, 100%); border-left: 1px solid rgba(255,255,255,.1); }
+}
+
+/* Universal Landscape Rotation (supports mobile Portrait Lock) */
+.player-container.player-rotate-landscape {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100dvh !important;
+  height: 100dvw !important;
+  max-width: 100dvh !important;
+  max-height: 100dvw !important;
+  transform: rotate(90deg) !important;
+  transform-origin: top left !important;
+  left: 100dvw !important;
+  top: 0 !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
+}
+
+body.body-player-rotated {
+  overflow: hidden !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

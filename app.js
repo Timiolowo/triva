@@ -37,6 +37,7 @@ const state = {
   videoFit: 'contain',
   drawerSubmenu: null,
   drawerOpen: false,
+  isRotated: false,
   clockTimer: null,
   actionFeedbackTimer: null,
   stallWatchdogTimer: null
@@ -879,7 +880,14 @@ function startPlayback(item, options) {
       epTagEl.textContent = `S${item.season}:E${item.episode}${item.episodeName ? ` "${item.episodeName}"` : ''}`;
       epTagEl.classList.remove('hidden');
     }
-    if (nextEpBtn) nextEpBtn.classList.remove('hidden');
+    const isMobile = window.matchMedia('(max-width: 960px)').matches || window.matchMedia('(pointer: coarse)').matches;
+    if (nextEpBtn) {
+      if (isMobile) {
+        nextEpBtn.classList.add('hidden');
+      } else {
+        nextEpBtn.classList.remove('hidden');
+      }
+    }
   } else {
     if (titleEl) titleEl.textContent = `${item.title} (${item.year || ''})`;
     if (epTagEl) epTagEl.classList.add('hidden');
@@ -1339,45 +1347,96 @@ function renderQualityDrawer() {
   if (!container) return;
   container.innerHTML = '';
 
-  // 1. Auto Option
-  const autoBtn = document.createElement('button');
-  autoBtn.type = 'button';
-  autoBtn.className = `choice-row ${state.currentQualityLevel === -1 ? 'active' : ''}`;
-  autoBtn.dataset.levelIndex = '-1';
-  autoBtn.tabIndex = 0;
-  autoBtn.innerHTML = `
-    <div>
-      <span>Auto</span>
-      <span class="choice-meta">(Dynamic Bitrate)</span>
-    </div>
-    <span class="choice-check ${state.currentQualityLevel === -1 ? '' : 'hidden'}">${SVG_ICONS.check}</span>
-  `;
-  autoBtn.onclick = () => setQualityLevel(-1);
-  container.appendChild(autoBtn);
-
-  // 2. Specific resolutions (deduplicated by height, descending)
-  const seenHeights = new Set();
-  const sortedLevels = [...state.availableLevels].sort((a, b) => b.height - a.height);
-
-  sortedLevels.forEach(lvl => {
-    if (seenHeights.has(lvl.height)) return;
-    seenHeights.add(lvl.height);
-
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = `choice-row ${state.currentQualityLevel === lvl.index ? 'active' : ''}`;
-    btn.dataset.levelIndex = String(lvl.index);
-    btn.tabIndex = 0;
-    btn.innerHTML = `
-      <div>
-        <span>${escapeHtml(lvl.label)}</span>
-        ${lvl.bitrate ? `<span class="choice-meta">${escapeHtml(lvl.bitrate)}</span>` : ''}
+  // Case 1: Embed Player Mode (backup iframe)
+  if (state.playerMode === 'embed') {
+    container.innerHTML = `
+      <div class="drawer-notice-box">
+        <div class="drawer-notice-title">Controlled on Player</div>
+        <p class="drawer-notice-desc">Quality for this backup stream is managed directly on the video screen. Tap the gear icon (⚙) on the video player to select your resolution.</p>
+        <button type="button" class="tv-btn tv-btn-secondary tv-btn-sm" style="margin-top: 12px; width: 100%;" onclick="switchToNativeMode()">
+          Try Ad-Free Stream
+        </button>
       </div>
-      <span class="choice-check ${state.currentQualityLevel === lvl.index ? '' : 'hidden'}">${SVG_ICONS.check}</span>
     `;
-    btn.onclick = () => setQualityLevel(lvl.index);
-    container.appendChild(btn);
-  });
+    return;
+  }
+
+  // Case 2: Apple Native HLS (iOS Safari / macOS Safari without Hls.js)
+  const videoEl = document.getElementById('nativeVideoPlayer');
+  const isAppleNative = !state.hlsInstance && !!(videoEl && videoEl.canPlayType('application/vnd.apple.mpegurl'));
+  if (isAppleNative && (!state.availableLevels || state.availableLevels.length === 0)) {
+    container.innerHTML = `
+      <div class="choice-row active" style="cursor: default;">
+        <div>
+          <span>Auto (Adaptive)</span>
+          <span class="choice-meta">Managed by Apple iOS Player</span>
+        </div>
+        <span class="choice-check">${SVG_ICONS.check}</span>
+      </div>
+      <p class="drawer-notice-desc" style="margin-top: 10px; padding: 0 4px;">
+        Apple WebKit automatically optimizes video stream quality (up to 4K/1080p) based on your network connection.
+      </p>
+    `;
+    return;
+  }
+
+  // Case 3: Specific levels available from HLS.js
+  if (state.availableLevels && state.availableLevels.length > 0) {
+    // 1. Auto Option
+    const autoBtn = document.createElement('button');
+    autoBtn.type = 'button';
+    autoBtn.className = `choice-row ${state.currentQualityLevel === -1 ? 'active' : ''}`;
+    autoBtn.dataset.levelIndex = '-1';
+    autoBtn.tabIndex = 0;
+    autoBtn.innerHTML = `
+      <div>
+        <span>Auto</span>
+        <span class="choice-meta">(Adaptive Bitrate)</span>
+      </div>
+      <span class="choice-check ${state.currentQualityLevel === -1 ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+    `;
+    autoBtn.onclick = () => setQualityLevel(-1);
+    container.appendChild(autoBtn);
+
+    // 2. Specific resolutions (deduplicated by height, descending)
+    const seenHeights = new Set();
+    const sortedLevels = [...state.availableLevels].sort((a, b) => b.height - a.height);
+
+    sortedLevels.forEach(lvl => {
+      if (seenHeights.has(lvl.height)) return;
+      seenHeights.add(lvl.height);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `choice-row ${state.currentQualityLevel === lvl.index ? 'active' : ''}`;
+      btn.dataset.levelIndex = String(lvl.index);
+      btn.tabIndex = 0;
+      btn.innerHTML = `
+        <div>
+          <span>${escapeHtml(lvl.label)}</span>
+          ${lvl.bitrate ? `<span class="choice-meta">${escapeHtml(lvl.bitrate)}</span>` : ''}
+        </div>
+        <span class="choice-check ${state.currentQualityLevel === lvl.index ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+      `;
+      btn.onclick = () => setQualityLevel(lvl.index);
+      container.appendChild(btn);
+    });
+    return;
+  }
+
+  // Case 4: Native mode with levels still detecting
+  container.innerHTML = `
+    <div class="choice-row active" style="cursor: default;">
+      <div>
+        <span>Auto</span>
+        <span class="choice-meta">(Optimizing stream)</span>
+      </div>
+      <span class="choice-check">${SVG_ICONS.check}</span>
+    </div>
+    <p class="drawer-notice-desc" style="margin-top: 10px; padding: 0 4px;">
+      Detecting stream resolutions…
+    </p>
+  `;
 }
 
 function setQualityLevel(levelIdx) {
@@ -1832,6 +1891,7 @@ function openDrawerSubmenu(submenu) {
     case 'quality':
       if (qualityMenu) qualityMenu.classList.remove('hidden');
       if (title) title.textContent = 'Quality';
+      renderQualityDrawer();
       panelToFocus = qualityMenu;
       break;
     case 'subtitles':
@@ -1912,12 +1972,69 @@ function playNextEpisode() {
   startPlayback(updatedItem);
 }
 
+async function toggleScreenRotation() {
+  const container = document.getElementById('playerView');
+  const video = document.getElementById('nativeVideoPlayer');
+  if (!container) return;
+
+  // 1. If screen.orientation API is available and supported (Android Chrome, modern devices)
+  if (screen.orientation && typeof screen.orientation.lock === 'function') {
+    const isPortrait = screen.orientation.type && screen.orientation.type.startsWith('portrait');
+    try {
+      if (isPortrait) {
+        if (!document.fullscreenElement && container.requestFullscreen) {
+          await container.requestFullscreen().catch(() => {});
+        }
+        await screen.orientation.lock('landscape');
+        state.isRotated = true;
+        showToast('Rotated to Landscape');
+        return;
+      } else {
+        await screen.orientation.unlock();
+        if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen().catch(() => {});
+        }
+        state.isRotated = false;
+        showToast('Returned to Portrait');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Screen orientation lock fallback to CSS rotation]', e.message);
+    }
+  }
+
+  // 2. iOS Safari native video fullscreen (for native Apple HLS)
+  if (video && typeof video.webkitEnterFullscreen === 'function' && state.playerMode === 'native' && !state.isRotated) {
+    try {
+      video.webkitEnterFullscreen();
+      return;
+    } catch (e) {}
+  }
+
+  // 3. Universal CSS 90-degree virtual rotation (works on iOS Safari even with Portrait Lock ON)
+  state.isRotated = !state.isRotated;
+  container.classList.toggle('player-rotate-landscape', state.isRotated);
+  document.body.classList.toggle('body-player-rotated', state.isRotated);
+  showToast(state.isRotated ? 'Rotated to Landscape' : 'Rotated to Portrait');
+}
+
 function togglePlayerFullscreen() {
   const container = document.getElementById('playerView');
+  const video = document.getElementById('nativeVideoPlayer');
   if (!container) return;
+
+  // On mobile touch devices, delegate to screen rotation
+  const isMobile = window.matchMedia('(max-width: 960px)').matches || window.matchMedia('(pointer: coarse)').matches;
+  if (isMobile) {
+    toggleScreenRotation();
+    return;
+  }
+
   if (!document.fullscreenElement) {
     if (container.requestFullscreen) {
       container.requestFullscreen().catch(() => {});
+    } else if (video && video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
     }
   } else {
     if (document.exitFullscreen) {
@@ -2022,6 +2139,8 @@ function cancelStreamFallback(preventExit = false) {
 window.triggerStreamFallback = triggerStreamFallback;
 window.confirmStreamFallback = confirmStreamFallback;
 window.cancelStreamFallback = cancelStreamFallback;
+window.switchToNativeMode = switchToNativeMode;
+window.toggleScreenRotation = toggleScreenRotation;
 
 function updatePlayerIframe() {
   if (!state.activeItem) return;
@@ -2112,7 +2231,17 @@ function stopPlayer() {
   const playerView = document.getElementById('playerView');
   if (controls) controls.classList.remove('controls-hidden');
   if (hud) hud.classList.remove('controls-hidden');
-  if (playerView) playerView.classList.remove('controls-hidden');
+  if (playerView) {
+    playerView.classList.remove('controls-hidden');
+    playerView.classList.remove('player-rotate-landscape');
+  }
+  document.body.classList.remove('body-player-rotated');
+  if (state.isRotated) {
+    state.isRotated = false;
+    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+      screen.orientation.unlock().catch(() => {});
+    }
+  }
   replacePlayerIframe('about:blank');
 }
 
@@ -2676,3 +2805,14 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+window.addEventListener('orientationchange', () => {
+  if (window.matchMedia('(orientation: landscape)').matches) {
+    const container = document.getElementById('playerView');
+    if (container && container.classList.contains('player-rotate-landscape')) {
+      container.classList.remove('player-rotate-landscape');
+      document.body.classList.remove('body-player-rotated');
+      state.isRotated = false;
+    }
+  }
+});

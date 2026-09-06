@@ -1,4 +1,6 @@
 const vm = require('vm');
+const fs = require('fs');
+const path = require('path');
 
 let cachedEngine = null;
 let lastInitTime = 0;
@@ -10,21 +12,34 @@ async function getEngine() {
     return cachedEngine;
   }
 
-  // 1. Fetch resolver chunk
-  const chunkUrl = 'https://cinejoy.to/_app/immutable/chunks/Cd3QBhFG.js';
-  const chunkRes = await fetch(chunkUrl);
-  if (!chunkRes.ok) {
-    throw new Error(`Failed to load Tivra resolver bundle: HTTP ${chunkRes.status}`);
+  // 1. Fetch or load resolver chunk
+  let code = '';
+  const localChunk = path.join(__dirname, 'vendor', 'Cd3QBhFG.js');
+  if (fs.existsSync(localChunk)) {
+    code = fs.readFileSync(localChunk, 'utf8');
+  } else {
+    const chunkUrl = 'https://cinejoy.to/_app/immutable/chunks/Cd3QBhFG.js';
+    const chunkRes = await fetch(chunkUrl);
+    if (!chunkRes.ok) {
+      throw new Error(`Failed to load Tivra resolver bundle: HTTP ${chunkRes.status}`);
+    }
+    code = await chunkRes.text();
   }
-  let code = await chunkRes.text();
   code = code.replace(/import[^;]+;/g, '').replace(/export\{[^}]+\};?/g, '');
 
-  // 2. Fetch WebAssembly crypto module
-  const wasmRes = await fetch('https://api.shegu.st/crush.wasm');
-  if (!wasmRes.ok) {
-    throw new Error(`Failed to load Tivra wasm module: HTTP ${wasmRes.status}`);
+  // 2. Fetch or load WebAssembly crypto module
+  let wasmBuffer;
+  const localWasm = path.join(__dirname, 'vendor', 'crush.wasm');
+  if (fs.existsSync(localWasm)) {
+    const buf = fs.readFileSync(localWasm);
+    wasmBuffer = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+  } else {
+    const wasmRes = await fetch('https://api.shegu.st/crush.wasm');
+    if (!wasmRes.ok) {
+      throw new Error(`Failed to load Tivra wasm module: HTTP ${wasmRes.status}`);
+    }
+    wasmBuffer = await wasmRes.arrayBuffer();
   }
-  const wasmBuffer = await wasmRes.arrayBuffer();
 
   // 3. Setup sandbox context mimicking browser environment
   const ctx = {
