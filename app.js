@@ -1002,6 +1002,10 @@ async function loadNativeStream(item) {
   if (loadingText) loadingText.textContent = 'Connecting ad-free stream…';
 
   // Clean up any existing HLS instance & tracks
+  state.availableLevels = [];
+  state.availableAudioTracks = [];
+  state.currentQualityLevel = -1;
+  state.activeAudioTrackIndex = 0;
   if (state.hlsInstance) {
     state.hlsInstance.destroy();
     state.hlsInstance = null;
@@ -1041,10 +1045,9 @@ async function loadNativeStream(item) {
       renderSubtitlesDrawer();
     }
 
-    // Apple devices play HLS natively. Other browsers load HLS.js only when playback starts.
-    if (!video.canPlayType('application/vnd.apple.mpegurl')) {
-      await ensureHlsLibrary();
-    }
+    // Always load HLS.js for quality/audio track controls.
+    // On iOS Safari (no MSE), HLS.js won't be supported so we fall back to native Apple HLS.
+    await ensureHlsLibrary();
 
     // Initialize HLS.js or native Apple HLS
     if (window.Hls && window.Hls.isSupported()) {
@@ -1061,6 +1064,10 @@ async function loadNativeStream(item) {
         setupHlsLevels(hls.levels);
         setupHlsAudioTracks(hls.audioTracks);
         video.play().catch(() => {});
+      });
+
+      hls.on(window.Hls.Events.LEVELS_UPDATED, (event, hlsData) => {
+        setupHlsLevels(hlsData.levels || hls.levels);
       });
 
       hls.on(window.Hls.Events.LEVEL_SWITCHED, (event, hlsData) => {
@@ -1369,10 +1376,9 @@ function renderQualityDrawer() {
     return;
   }
 
-  // Case 2: Apple Native HLS (iOS Safari / macOS Safari without Hls.js)
-  const videoEl = document.getElementById('nativeVideoPlayer');
-  const isAppleNative = !state.hlsInstance && !!(videoEl && videoEl.canPlayType('application/vnd.apple.mpegurl'));
-  if (isAppleNative && (!state.availableLevels || state.availableLevels.length === 0)) {
+  // Case 2: Pure Apple Native Safari (iOS where Hls is not supported)
+  const isAppleOnly = !window.Hls?.isSupported() && !!document.getElementById('nativeVideoPlayer')?.canPlayType('application/vnd.apple.mpegurl');
+  if (isAppleOnly && (!state.availableLevels || state.availableLevels.length === 0)) {
     container.innerHTML = `
       <div class="choice-row active" style="cursor: default;">
         <div>
@@ -1382,7 +1388,7 @@ function renderQualityDrawer() {
         <span class="choice-check">${SVG_ICONS.check}</span>
       </div>
       <p class="drawer-notice-desc" style="margin-top: 10px; padding: 0 4px;">
-        Apple WebKit automatically optimizes video stream quality (up to 4K/1080p) based on your network connection.
+        Apple WebKit automatically optimizes video stream quality based on your network connection.
       </p>
     `;
     return;
@@ -1744,6 +1750,22 @@ function renderAudioDrawer() {
   if (!container) return;
   container.innerHTML = '';
 
+  if (!state.availableAudioTracks || state.availableAudioTracks.length === 0) {
+    container.innerHTML = `
+      <div class="choice-row active" style="cursor: default;">
+        <div>
+          <span>Default Track</span>
+          <span class="choice-meta">(Stereo / Primary)</span>
+        </div>
+        <span class="choice-check">${SVG_ICONS.check}</span>
+      </div>
+      <p class="drawer-notice-desc" style="margin-top: 10px; padding: 0 4px;">
+        Single primary audio track detected.
+      </p>
+    `;
+    return;
+  }
+
   state.availableAudioTracks.forEach((track, idx) => {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -1910,6 +1932,7 @@ function openDrawerSubmenu(submenu) {
     case 'audio':
       if (audioMenu) audioMenu.classList.remove('hidden');
       if (title) title.textContent = 'Audio Tracks';
+      renderAudioDrawer();
       panelToFocus = audioMenu;
       break;
     case 'speed':

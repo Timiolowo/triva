@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=35">
+  <link rel="stylesheet" href="/style.css?v=36">
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 <body>
   <div id="app" class="app-container">
@@ -360,21 +361,11 @@
           <iframe id="videoIframe" src="about:blank" title="Video player" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
         </div>
 
-        <!-- Stream fallback notification (compact toast pill that leaves after 5s) -->
+        <!-- Stream fallback notification (compact toast pill that auto-dismisses after 5s) -->
         <div id="streamFallbackOverlay" class="stream-fallback-pill hidden" role="status" aria-live="polite">
-          <div class="fallback-pill-content">
-            <div class="fallback-pill-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <div class="fallback-pill-info">
-              <span id="fallbackTitle" class="fallback-pill-title">Stream issue detected</span>
-              <span id="fallbackMessage" class="fallback-pill-sub">Backup player available</span>
-            </div>
-            <div class="fallback-pill-actions">
-              <button type="button" id="fallbackSwitchBtn" class="fallback-action-btn" onclick="confirmStreamFallback()" tabindex="0">Switch to Backup</button>
-              <button type="button" id="fallbackCancelBtn" class="fallback-close-btn" onclick="cancelStreamFallback()" tabindex="0" aria-label="Dismiss">✕</button>
-            </div>
-          </div>
+          <span class="sfp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <span id="fallbackMessage" class="sfp-text">Backup player available</span>
+          <button type="button" id="fallbackSwitchBtn" class="sfp-action" onclick="confirmStreamFallback()" tabindex="0">Switch</button>
         </div>
       </section>
     </main>
@@ -390,6 +381,6 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/app.js?v=33"></script>
+  <script src="/app.js?v=35"></script>
 </body>
 </html>
