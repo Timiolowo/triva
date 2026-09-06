@@ -2,6 +2,8 @@
 
 Tivra is a lightweight, remote-friendly movie and TV interface designed for Smart TV browsers.
 
+The home screen refreshes from TMDB's daily trending feed every 24 hours and falls back to its saved picks when the feed is unavailable.
+
 ## Local setup
 
 1. Copy `.env.example` to `.env.local`.

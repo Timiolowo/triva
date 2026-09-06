@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#080808">
-  <meta name="description" content="Tivra is a fast, lightweight movie and TV player built for Smart TVs.">
-  <title>Tivra — Watch without the clutter</title>
-  <link rel="stylesheet" href="/style.css?v=3">
+  <meta name="description" content="Tivra is a fast, lightweight movie and TV player for phones, computers, and Smart TVs.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css?v=33">
 </head>
 <body>
   <div id="app" class="app-container">
     <header class="app-header">
       <button type="button" class="brand" onclick="showHomeView()" tabindex="0" aria-label="Tivra home">
-        <span class="brand-mark">T</span><span class="brand-name">Tivra</span>
+        <span class="brand-name">Tivra</span>
       </button>
       <nav class="header-nav" aria-label="Main navigation">
         <button type="button" class="nav-tab active" onclick="filterCategory('all')" tabindex="0">Home</button>
@@ -20,54 +22,64 @@
         <button type="button" class="nav-tab" onclick="filterCategory('tv')" tabindex="0">Series</button>
       </nav>
       <div class="header-search-area">
-        <button type="button" id="headerSearchTrigger" class="header-search-trigger" onclick="focusSearch()" tabindex="0" aria-expanded="false" aria-controls="searchForm"><span aria-hidden="true">⌕</span> Search</button>
+        <button type="button" id="headerSearchTrigger" class="header-search-trigger" onclick="focusSearch()" tabindex="0" aria-expanded="false" aria-controls="searchForm"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Search</button>
         <form id="searchForm" class="header-search-form hidden" onsubmit="event.preventDefault(); handleSearchSubmit();">
-          <span class="search-icon" aria-hidden="true">⌕</span>
+          <span class="search-icon" aria-hidden="true"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
           <label class="sr-only" for="searchInput">Search movies and TV shows</label>
-          <input type="text" id="searchInput" class="tv-input" placeholder="Search a movie or series…" autocomplete="off" tabindex="0">
+          <input type="text" id="searchInput" class="tv-input" placeholder="Movies and series…" autocomplete="off" tabindex="0">
           <button type="submit" id="searchSubmitBtn" class="tv-btn tv-btn-primary tv-btn-sm" tabindex="0">Search</button>
-          <button type="button" class="search-close" onclick="closeHeaderSearch()" tabindex="0" aria-label="Close search">×</button>
+          <button type="button" class="search-close" onclick="closeHeaderSearch()" tabindex="0" aria-label="Close search"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </form>
       </div>
     </header>
 
     <main class="main-content">
       <section id="homeView" class="view-section active">
-        <div id="heroSpotlight" class="hero-spotlight">
+        <div id="heroSpotlight" class="hero-spotlight hero-loading" aria-busy="true">
           <div class="hero-content">
-            <div class="eyebrow">Tivra selection</div>
-            <h1 id="heroTitle" class="hero-title">Dune: Part Two</h1>
+            <div class="eyebrow">Trending today</div>
+            <h1 id="heroTitle" class="hero-title"><span class="sr-only">Loading today’s trends</span></h1>
             <div id="heroMeta" class="hero-meta-row">
-              <span id="heroRating" class="rating">★ 8.5</span><span id="heroYear">2024</span><span id="heroType">Movie</span><span class="quality">4K</span>
+              <span id="heroRating" class="rating"></span><span id="heroYear"></span><span id="heroType"></span><span class="quality"></span>
             </div>
-            <p id="heroOverview" class="hero-overview">Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.</p>
+            <p id="heroOverview" class="hero-overview"></p>
             <div class="hero-actions">
-              <button type="button" id="heroPlayBtn" class="tv-btn tv-btn-primary" tabindex="0">▶&nbsp; Play now</button>
-              <button type="button" id="heroInfoBtn" class="tv-btn tv-btn-secondary" tabindex="0">Search titles</button>
+              <button type="button" id="heroPlayBtn" class="tv-btn tv-btn-primary" tabindex="0" disabled><svg viewBox="0 0 24 24" class="svg-icon" fill="currentColor" style="margin-right: 6px;"><path d="M8 5v14l11-7z"/></svg>Play now</button>
+              <button type="button" id="heroInfoBtn" class="tv-btn tv-btn-secondary" tabindex="0" disabled>More info</button>
             </div>
           </div>
         </div>
 
-        <div id="continueWatchingSection" class="content-section hidden text-only-section">
-          <div class="section-header"><div><p class="section-kicker">Pick up where you stopped</p><h2 class="section-title">Continue watching</h2></div><button class="tv-btn tv-btn-quiet tv-btn-sm" onclick="clearWatchHistory()">Clear</button></div>
-          <div id="continueWatchingList" class="tv-list"></div>
+        <div id="continueWatchingSection" class="content-section hidden">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Continue watching</h2>
+            </div>
+            <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="clearWatchHistory()" tabindex="0" title="Clear watch history">
+              <svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Clear
+            </button>
+          </div>
+          <div id="continueWatchingList" class="continue-watching-grid"></div>
         </div>
 
         <div id="trendingSection" class="content-section">
-          <div class="section-header"><div><p class="section-kicker">A few good choices, nothing more</p><h2 id="sectionHeading" class="section-title">Featured tonight</h2></div><span class="section-subtitle">OK to watch</span></div>
-          <div id="trendingList" class="featured-list"></div>
+          <div class="section-header"><div><h2 id="sectionHeading" class="section-title">Trending today</h2></div><span class="section-subtitle">OK to watch</span></div>
+          <div id="trendingList" class="featured-list" aria-busy="true">
+            <div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div>
+          </div>
         </div>
-        <footer class="home-footer"><span>Built for TV</span><span>Use ▲ ▼ ◀ ▶ to move · OK to select · BACK to return</span></footer>
+        <footer class="app-footer"><span>Tivra</span></footer>
       </section>
 
       <section id="resultsView" class="view-section hidden">
-        <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0">← Home</button><div><p class="section-kicker">Choose a title to start</p><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
+        <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Home</button><div><p class="section-kicker">Choose a title to start</p><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
         <div id="resultsList" class="tv-list"></div>
       </section>
 
       <section id="tvShowView" class="view-section hidden">
         <div class="view-nav-header series-view-header">
-          <button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showResultsOrHome()" tabindex="0">← Back</button>
+          <button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showResultsOrHome()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>
           <div class="series-heading-copy">
             <p class="section-kicker">Series library</p>
             <div class="show-title-wrap"><h2 id="tvShowTitle" class="view-heading">Series title</h2><span id="tvShowMeta" class="meta-tag">TV series</span></div>
@@ -81,16 +93,300 @@
       </section>
 
       <section id="playerView" class="view-section player-container hidden">
+        <!-- Top Bar -->
         <div id="playerControls" class="player-top-bar">
-          <button type="button" id="playerExitBtn" class="tv-btn tv-btn-secondary" onclick="exitPlayer()" tabindex="0">← Exit</button>
-          <span id="playerNowPlayingTitle" class="now-playing-title">Now playing</span>
-          <div class="player-server-select"><label for="serverSelect" class="server-label">Source</label><select id="serverSelect" class="tv-select" onchange="changeServer(this.value)" tabindex="0"><option value="videasy">Primary</option><option value="vidlink">Source 2</option><option value="vidking">Source 3</option><option value="vidsrcto">Source 4</option><option value="vidnest">Source 5</option><option value="vidrock">Source 6</option><option value="vidfast">Source 7</option><option value="2embed">Source 8</option><option value="multiembed">Source 9</option></select></div>
+          <div class="player-top-left">
+            <button type="button" id="playerExitBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="exitPlayer()" tabindex="0" title="Exit player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>
+            <div class="player-title-box">
+              <span id="playerNowPlayingTitle" class="now-playing-title">Now playing</span>
+              <span id="playerEpisodeTag" class="player-episode-tag hidden"></span>
+            </div>
+          </div>
+          <div class="player-top-right">
+            <span id="playerQualityBadge" class="player-badge-quality" title="Current video stream resolution">AUTO</span>
+            <span id="playerClock" class="player-clock">--:--</span>
+            <select id="serverSelect" class="tv-select tv-select-sm hidden" onchange="changeServer(this.value)" tabindex="-1">
+              <option value="native">★ Ad-Free (Native)</option>
+              <option value="videasy">Embed 1 (Videasy)</option>
+              <option value="vidlink">Embed 2 (VidLink)</option>
+              <option value="vidking">Embed 3 (VidKing)</option>
+              <option value="vidsrcto">Embed 4 (VidSrc)</option>
+              <option value="vidnest">Embed 5 (VidNest)</option>
+              <option value="vidrock">Embed 6 (VidRock)</option>
+              <option value="vidfast">Embed 7 (VidFast)</option>
+              <option value="2embed">Embed 8 (2Embed)</option>
+              <option value="multiembed">Embed 9 (MultiEmbed)</option>
+            </select>
+          </div>
         </div>
-        <div class="iframe-wrapper"><iframe id="videoIframe" src="about:blank" title="Video player" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe></div>
+
+        <!-- Center Screen Action Feedback -->
+        <div id="playerActionFeedback" class="player-action-feedback hidden" aria-hidden="true">
+          <span id="playerActionIcon" class="player-action-icon"></span>
+          <span id="playerActionText" class="player-action-text"></span>
+        </div>
+
+        <!-- Native Ad-Free Player (Default) -->
+        <div id="nativePlayerContainer" class="native-player-container sub-weight-normal">
+          <video id="nativeVideoPlayer" class="native-video-player" playsinline preload="auto" tabindex="0"></video>
+          
+          <!-- Rolling Ring Buffering Indicator (Shows whenever playback buffers or network stalls) -->
+          <div id="playerBufferingIndicator" class="player-buffering-indicator hidden" aria-label="Buffering" role="status">
+            <div class="rolling-ring-spinner" aria-hidden="true"></div>
+          </div>
+
+          <!-- Initial Connection Overlay -->
+          <div id="playerLoadingOverlay" class="player-loading-overlay">
+            <div class="rolling-ring-spinner" aria-hidden="true"></div>
+          </div>
+
+          <!-- Bottom HUD Overlay: Unified Inline Bar (Play/Pause at side of progress bar) -->
+          <div id="playerHudOverlay" class="player-hud-overlay">
+            <div class="player-unified-bar">
+              <!-- Left: Play/Pause, Replay 10s, Forward 10s, Current Time -->
+              <div class="hud-inline-left">
+                <button type="button" id="playerPlayPauseBtn" class="tv-btn tv-btn-sm tv-btn-primary hud-btn-circle" onclick="togglePlayPause()" tabindex="0" title="Play/Pause" aria-label="Play or pause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                <button type="button" id="playerRewindBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(-10)" tabindex="0" title="Rewind 10s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5V2L8 6l4 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="15.5" font-size="7.5" font-weight="900" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg>10s</button>
+                <button type="button" id="playerForwardBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(10)" tabindex="0" title="Forward 10s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5V2l4 4-4 4V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="15.5" font-size="7.5" font-weight="900" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg>10s</button>
+                <span id="playerCurrentTime" class="hud-time-val">0:00</span>
+              </div>
+
+              <!-- Center: The Progress Bar (flexible width) -->
+              <div class="player-timeline-wrap">
+                <div id="playerProgressBar" class="player-progress-bar" onclick="seekByClick(event)" role="slider" aria-label="Playback progress" tabindex="0">
+                  <div id="playerBufferFill" class="player-buffer-fill"></div>
+                  <div id="playerProgressFill" class="player-progress-fill"></div>
+                  <div id="playerProgressThumb" class="player-progress-thumb"></div>
+                </div>
+              </div>
+
+              <!-- Right: Duration, Next Ep, Settings, Fullscreen -->
+              <div class="hud-inline-right">
+                <span id="playerDuration" class="hud-time-val">0:00</span>
+                <button type="button" id="playerNextEpBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round hidden" onclick="playNextEpisode()" tabindex="0" title="Next Episode"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>Next</button>
+                <button type="button" id="playerSettingsBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="toggleSettingsDrawer()" tabindex="0" title="Settings (Quality, Subtitles, Audio, Embed)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
+                <button type="button" id="playerFullscreenBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="togglePlayerFullscreen()" tabindex="0" title="Fullscreen" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Glassmorphic Settings Drawer -->
+        <div id="playerSettingsDrawer" class="player-settings-drawer hidden" role="dialog" aria-label="Player Settings">
+          <!-- Drawer Header -->
+          <div class="drawer-header">
+            <button type="button" id="drawerBackBtn" class="drawer-back-btn hidden" onclick="drawerGoBack()" tabindex="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>
+            <h3 id="drawerTitle" class="drawer-title">Settings</h3>
+            <button type="button" id="drawerCloseBtn" class="drawer-close-btn" onclick="closeSettingsDrawer()" tabindex="0" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          </div>
+
+          <!-- Main Menu Panel -->
+          <div id="drawerMainMenu" class="drawer-panel">
+            <button type="button" class="drawer-menu-item" onclick="openDrawerSubmenu('quality')" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Quality</span>
+                <span id="menuActiveQuality" class="item-subtext">Auto</span>
+              </div>
+              <span class="item-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+
+            <button type="button" class="drawer-menu-item" onclick="openDrawerSubmenu('subtitles')" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Subtitles</span>
+                <span id="menuActiveSubtitle" class="item-subtext">Off</span>
+              </div>
+              <span class="item-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+
+            <button type="button" class="drawer-menu-item" onclick="openDrawerSubmenu('audio')" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Audio Track</span>
+                <span id="menuActiveAudio" class="item-subtext">Default</span>
+              </div>
+              <span class="item-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+
+            <button type="button" class="drawer-menu-item" onclick="openDrawerSubmenu('speed')" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Playback Speed</span>
+                <span id="menuActiveSpeed" class="item-subtext">1.0x (Normal)</span>
+              </div>
+              <span class="item-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+
+            <button type="button" class="drawer-menu-item" onclick="toggleScreenFit()" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Screen Fit</span>
+                <span id="menuActiveFit" class="item-subtext">Fit (Original)</span>
+              </div>
+              <span class="item-toggle-badge">Toggle</span>
+            </button>
+
+            <button type="button" class="drawer-menu-item drawer-item-fallback" onclick="switchToEmbedMode()" tabindex="0">
+              <span class="item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg></span>
+              <div class="item-text-group">
+                <span class="item-label">Switch to Embed Player</span>
+                <span class="item-subtext">Fallback if ad-free stream has issues</span>
+              </div>
+              <span class="item-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
+            </button>
+          </div>
+
+          <!-- Submenu: Quality -->
+          <div id="drawerQualitySubmenu" class="drawer-panel hidden">
+            <div class="drawer-section-title">Video Quality (HLS Streams)</div>
+            <div id="drawerQualityList" class="drawer-choice-list">
+              <!-- Dynamically populated from hls.levels -->
+            </div>
+          </div>
+
+          <!-- Submenu: Subtitles -->
+          <div id="drawerSubtitlesSubmenu" class="drawer-panel hidden">
+            <div class="drawer-tabs">
+              <button type="button" id="subTabTracks" class="drawer-tab active" onclick="switchSubtitleTab('tracks')" tabindex="0">Tracks</button>
+              <button type="button" id="subTabOptions" class="drawer-tab" onclick="switchSubtitleTab('options')" tabindex="0">Style & Sync</button>
+            </div>
+
+            <!-- Subtitles: Tracks Tab -->
+            <div id="subTabContentTracks" class="drawer-tab-content">
+              <div class="sub-search-wrap">
+                <input type="text" id="subSearchInput" class="tv-input drawer-search-input" placeholder="Search language…" oninput="filterSubtitleLanguages(this.value)" tabindex="0">
+              </div>
+              <div class="drawer-section-title">OpenSubtitles (50+ Languages)</div>
+              <div id="drawerSubtitlesList" class="drawer-choice-list">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Subtitles: Style & Sync Tab -->
+            <div id="subTabContentOptions" class="drawer-tab-content hidden">
+              <div class="drawer-section-title">Subtitle Size (TV Viewing)</div>
+              <div class="drawer-choice-list">
+                <button type="button" class="choice-row" onclick="setSubtitleSize('small')" tabindex="0">
+                  <span>Small (80%)</span>
+                  <span id="checkSubSizeSmall" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+                <button type="button" class="choice-row" onclick="setSubtitleSize('normal')" tabindex="0">
+                  <span>Normal (100%)</span>
+                  <span id="checkSubSizeNormal" class="choice-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+                <button type="button" class="choice-row" onclick="setSubtitleSize('large')" tabindex="0">
+                  <span>Large (135%)</span>
+                  <span id="checkSubSizeLarge" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+                <button type="button" class="choice-row" onclick="setSubtitleSize('xlarge')" tabindex="0">
+                  <span>Extra Large (170%)</span>
+                  <span id="checkSubSizeXlarge" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+              </div>
+
+              <div class="drawer-section-title" style="margin-top: 18px;">Subtitle Font Width / Weight</div>
+              <div class="drawer-choice-list">
+                <button type="button" class="choice-row" onclick="setSubtitleWeight('normal')" tabindex="0">
+                  <span>Regular (Normal)</span>
+                  <span id="checkSubWeightNormal" class="choice-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+                <button type="button" class="choice-row" onclick="setSubtitleWeight('bold')" tabindex="0">
+                  <span>Bold</span>
+                  <span id="checkSubWeightBold" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+                <button type="button" class="choice-row" onclick="setSubtitleWeight('heavy')" tabindex="0">
+                  <span>Heavy (Extra Bold)</span>
+                  <span id="checkSubWeightHeavy" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+                </button>
+              </div>
+
+              <div class="drawer-section-title" style="margin-top: 18px;">Subtitle Timing Offset</div>
+              <div class="sync-offset-row">
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(-0.5)" tabindex="0">-0.5s</button>
+                <span id="subtitleOffsetDisplay" class="offset-display">0.0s</span>
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(0.5)" tabindex="0">+0.5s</button>
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-quiet" onclick="adjustSubtitleOffset(0, true)" tabindex="0">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submenu: Audio Tracks -->
+          <div id="drawerAudioSubmenu" class="drawer-panel hidden">
+            <div class="drawer-section-title">Available Audio Tracks</div>
+            <div id="drawerAudioList" class="drawer-choice-list">
+              <!-- Dynamically populated from hls.audioTracks -->
+            </div>
+          </div>
+
+          <!-- Submenu: Playback Speed -->
+          <div id="drawerSpeedSubmenu" class="drawer-panel hidden">
+            <div class="drawer-section-title">Playback Rate</div>
+            <div class="drawer-choice-list">
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(0.5)" tabindex="0">
+                <span>0.5x (Slow)</span>
+                <span id="checkSpeed05" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(0.75)" tabindex="0">
+                <span>0.75x</span>
+                <span id="checkSpeed075" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(1.0)" tabindex="0">
+                <span>1.0x (Normal)</span>
+                <span id="checkSpeed10" class="choice-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(1.25)" tabindex="0">
+                <span>1.25x</span>
+                <span id="checkSpeed125" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(1.5)" tabindex="0">
+                <span>1.5x (Fast)</span>
+                <span id="checkSpeed15" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+              <button type="button" class="choice-row" onclick="setPlaybackSpeed(2.0)" tabindex="0">
+                <span>2.0x (Double Speed)</span>
+                <span id="checkSpeed20" class="choice-check hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Iframe Embed Player (Fallback) -->
+        <div id="iframePlayerWrapper" class="iframe-wrapper hidden">
+          <div class="iframe-top-actions">
+            <button type="button" class="tv-btn tv-btn-sm tv-btn-primary hud-btn-round" onclick="switchToNativeMode()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="currentColor" style="margin-right:6px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Switch Back to Ad-Free</button>
+          </div>
+          <iframe id="videoIframe" src="about:blank" title="Video player" allowfullscreen allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+        </div>
+
+        <!-- Stream failure warning: switching players always requires confirmation. -->
+        <div id="streamFallbackOverlay" class="stream-fallback-overlay hidden" role="alertdialog" aria-modal="true" aria-labelledby="fallbackTitle">
+          <div class="stream-fallback-card">
+            <div class="fallback-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <h3 id="fallbackTitle" class="fallback-title">Ad-Free Stream Unavailable</h3>
+            <p id="fallbackMessage" class="fallback-message">This stream could not be loaded. You can switch to the backup player or cancel.</p>
+            <div class="fallback-actions">
+              <button type="button" id="fallbackSwitchBtn" class="tv-btn tv-btn-primary hud-btn-round" onclick="confirmStreamFallback()" tabindex="0">Switch to Backup</button>
+              <button type="button" id="fallbackCancelBtn" class="tv-btn tv-btn-secondary hud-btn-round" onclick="cancelStreamFallback()" tabindex="0">Cancel</button>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
+    <div id="mediaInfoOverlay" class="media-info-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mediaInfoTitle">
+      <div class="media-info-card">
+        <button type="button" id="mediaInfoClose" class="media-info-close" onclick="closeMediaInfo()" aria-label="Close details">×</button>
+        <p class="section-kicker">Trending today</p>
+        <h2 id="mediaInfoTitle" class="media-info-title"></h2>
+        <div id="mediaInfoMeta" class="media-info-meta"></div>
+        <p id="mediaInfoOverview" class="media-info-overview"></p>
+        <button type="button" id="mediaInfoAction" class="tv-btn tv-btn-primary">Play now</button>
+      </div>
+    </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/app.js?v=6"></script>
+  <script src="/app.js?v=29"></script>
 </body>
 </html>

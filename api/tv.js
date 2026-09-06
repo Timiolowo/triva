@@ -67,6 +67,8 @@ module.exports = async function handler(req, res) {
         status: data.status || '',
         genres: (data.genres || []).slice(0, 2).map(genre => genre.name),
         rating: data.vote_average ? Number(data.vote_average.toFixed(1)) : null,
+        image: data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null,
+        heroImage: data.backdrop_path ? `https://image.tmdb.org/t/p/w1280${data.backdrop_path}` : (data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null),
         seasons
       });
     }

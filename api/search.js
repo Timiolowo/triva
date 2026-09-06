@@ -31,6 +31,8 @@ module.exports = async function handler(req, res) {
         year: (item.release_date || item.first_air_date || '').substring(0, 4) || 'N/A',
         overview: item.overview ? (item.overview.length > 180 ? item.overview.substring(0, 180) + '...' : item.overview) : 'No description available.',
         rating: item.vote_average ? Number(item.vote_average.toFixed(1)) : null,
+        image: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+        heroImage: item.backdrop_path ? `https://image.tmdb.org/t/p/w1280${item.backdrop_path}` : (item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null)
       }));
 
     res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=86400');

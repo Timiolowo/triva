@@ -5,6 +5,10 @@ const path = require('path');
 // Import API handlers
 const searchHandler = require('./api/search.js');
 const tvHandler = require('./api/tv.js');
+const trendingHandler = require('./api/trending.js');
+const sourceHandler = require('./api/source.js');
+const proxyHandler = require('./api/proxy.js');
+const subtitlesHandler = require('./api/subtitles.js');
 
 const PORT = process.env.PORT || 3000;
 
@@ -44,6 +48,18 @@ const server = http.createServer(async (req, res) => {
   }
   if (pathname === '/api/tv' || pathname === '/api/tv.js') {
     return tvHandler(req, res);
+  }
+  if (pathname === '/api/trending' || pathname === '/api/trending.js') {
+    return trendingHandler(req, res);
+  }
+  if (pathname === '/api/source' || pathname === '/api/source.js') {
+    return sourceHandler(req, res);
+  }
+  if (pathname === '/api/proxy' || pathname === '/api/proxy.js') {
+    return proxyHandler(req, res);
+  }
+  if (pathname === '/api/subtitles' || pathname === '/api/subtitles.js') {
+    return subtitlesHandler(req, res);
   }
   // Static File Serving
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);

@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env.local server.js",
     "start": "node server.js",
-    "check": "node --check app.js && node --check server.js && node --check api/search.js && node --check api/tv.js && node --check api/_config.js"
+    "build": "npm run check",
+    "check": "node --check app.js && node --check server.js && node --check api/search.js && node --check api/tv.js && node --check api/trending.js && node --check api/_config.js && node --check api/source.js && node --check api/proxy.js && node --check api/_tivra.js && node --check api/subtitles.js"
   },
   "keywords": ["tv", "vidaa", "hisense", "streaming", "tmdb", "minimal"],
   "author": "",
