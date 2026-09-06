@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
+  "engines": {
+    "node": "20.x"
+  },
   "description": "Ultra-lightweight TV-optimized movie and TV streaming web player for Smart TV VIDAA browsers",
   "main": "server.js",
   "scripts": {
