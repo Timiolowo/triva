@@ -42,11 +42,7 @@ async function getEngine() {
     }
     code = await chunkRes.text();
   }
-  code = code
-    .replace(/import[^;]+;/g, '')
-    .replace(/export\{[^}]+\};?/g, '')
-    .replace(/const\s+[^=]+=\s*require\([^)]+\);?/g, '')
-    .replace(/require\([^)]+\);?/g, '');
+  code = code.replace(/import[^;]+;/g, '').replace(/export\{[^}]+\};?/g, '');
 
   // 2. Fetch or load WebAssembly crypto module
   let wasmBuffer;
