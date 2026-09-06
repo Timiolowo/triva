@@ -42,7 +42,11 @@ async function getEngine() {
     }
     code = await chunkRes.text();
   }
-  code = code.replace(/import[^;]+;/g, '').replace(/export\{[^}]+\};?/g, '');
+  code = code
+    .replace(/import[^;]+;/g, '')
+    .replace(/export\{[^}]+\};?/g, '')
+    .replace(/const\s+[^=]+=\s*require\([^)]+\);?/g, '')
+    .replace(/require\([^)]+\);?/g, '');
 
   // 2. Fetch or load WebAssembly crypto module
   let wasmBuffer;
@@ -59,6 +63,7 @@ async function getEngine() {
   }
 
   // 3. Setup sandbox context mimicking browser environment
+  const dummyProxy = new Proxy({}, { get: () => () => ({}) });
   const ctx = {
     console: { log: () => {}, warn: () => {}, error: () => {} },
     navigator: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
@@ -74,7 +79,13 @@ async function getEngine() {
     WebAssembly,
     exports: {},
     module: { exports: {} },
-    require: (typeof require !== 'undefined' ? require : () => ({})),
+    require: (mod) => {
+      try {
+        return require(mod);
+      } catch (e) {
+        return dummyProxy;
+      }
+    },
     Buffer: typeof Buffer !== 'undefined' ? Buffer : undefined,
     process: typeof process !== 'undefined' ? process : { env: {} },
     setTimeout,
