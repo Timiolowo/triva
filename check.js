@@ -12,6 +12,7 @@ const files = [
   'api/proxy.js',
   'api/_tivra.js',
   'api/subtitles.js'
+  ,'api/download.js'
 ];
 
 for (const file of files) {

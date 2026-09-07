@@ -29,7 +29,10 @@ module.exports = async function handler(req, res) {
         episode_number: ep.episode_number,
         name: ep.name || `Episode ${ep.episode_number}`,
         air_date: ep.air_date || '',
-        runtime: ep.runtime || null
+        runtime: ep.runtime || null,
+        overview: ep.overview || '',
+        vote_average: ep.vote_average || null,
+        still_path: ep.still_path || null
       }));
 
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=36">
+  <link rel="stylesheet" href="/style.css?v=37">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 <body>
@@ -371,16 +371,31 @@
     </main>
     <div id="mediaInfoOverlay" class="media-info-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="mediaInfoTitle">
       <div class="media-info-card">
+        <img id="mediaInfoArtwork" class="media-info-artwork" src="" alt="">
         <button type="button" id="mediaInfoClose" class="media-info-close" onclick="closeMediaInfo()" aria-label="Close details">×</button>
-        <p class="section-kicker">Trending today</p>
-        <h2 id="mediaInfoTitle" class="media-info-title"></h2>
-        <div id="mediaInfoMeta" class="media-info-meta"></div>
-        <p id="mediaInfoOverview" class="media-info-overview"></p>
-        <button type="button" id="mediaInfoAction" class="tv-btn tv-btn-primary">Play now</button>
+        <div class="media-info-content">
+          <p id="mediaInfoKicker" class="section-kicker">Trending today</p>
+          <h2 id="mediaInfoTitle" class="media-info-title"></h2>
+          <div id="mediaInfoMeta" class="media-info-meta"></div>
+          <p id="mediaInfoOverview" class="media-info-overview"></p>
+          <div class="media-info-actions">
+            <button type="button" id="mediaInfoAction" class="tv-btn tv-btn-primary">Play now</button>
+            <button type="button" id="mediaInfoDownload" class="tv-btn tv-btn-primary hidden" onclick="DownloadLinks.showOptions()">Download</button>
+          </div>
+          <div id="downloadPanel" class="download-panel hidden">
+            <label for="downloadQuality">Video quality</label>
+            <select id="downloadQuality" class="tv-select" disabled></select>
+            <div class="download-actions">
+              <button type="button" class="tv-btn tv-btn-primary tv-btn-sm" onclick="DownloadLinks.copyLink()">Copy link</button>
+            </div>
+            <p id="downloadStatus" class="download-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
       </div>
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/app.js?v=35"></script>
+  <script src="/downloads.js?v=1"></script>
+  <script src="/app.js?v=37"></script>
 </body>
 </html>

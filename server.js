@@ -9,6 +9,7 @@ const trendingHandler = require('./api/trending.js');
 const sourceHandler = require('./api/source.js');
 const proxyHandler = require('./api/proxy.js');
 const subtitlesHandler = require('./api/subtitles.js');
+const downloadHandler = require('./api/download.js');
 
 const PORT = process.env.PORT || 3000;
 
@@ -66,6 +67,10 @@ const server = http.createServer(async (req, res) => {
   if (pathname === '/api/subtitles' || pathname === '/api/subtitles.js') {
     delete require.cache[require.resolve('./api/subtitles.js')];
     return require('./api/subtitles.js')(req, res);
+  }
+  if (pathname === '/api/download' || pathname === '/api/download.js') {
+    delete require.cache[require.resolve('./api/download.js')];
+    return require('./api/download.js')(req, res);
   }
   // Static File Serving
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);

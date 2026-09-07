@@ -14,6 +14,7 @@ const state = {
   trendingRaw: [],
   currentCategoryFilter: 'all',
   heroItem: null,
+  mediaInfoReturnFocus: null,
   focusMemory: {},
   apiCache: {},
   pendingRequests: {},
@@ -495,29 +496,38 @@ function showMediaInfo(item) {
   const overlay = document.getElementById('mediaInfoOverlay');
   const action = document.getElementById('mediaInfoAction');
   if (!overlay || !action) return;
+  state.mediaInfoReturnFocus = document.activeElement;
 
   const card = overlay.querySelector('.media-info-card');
+  const artworkImage = document.getElementById('mediaInfoArtwork');
   const artwork = item.heroImage || item.backdrop || item.image || item.poster;
-  if (card && artwork) {
-    card.style.setProperty('--media-info-artwork', `url(${JSON.stringify(String(artwork))})`);
+  if (card && artwork && artworkImage) {
+    artworkImage.src = artwork;
+    artworkImage.alt = `${item.title} artwork`;
     card.classList.add('has-artwork');
-  } else if (card) {
-    card.style.removeProperty('--media-info-artwork');
+  } else if (card && artworkImage) {
+    artworkImage.removeAttribute('src');
+    artworkImage.alt = '';
     card.classList.remove('has-artwork');
   }
 
-  document.getElementById('mediaInfoTitle').textContent = item.title;
+  const isEpisode = item.type === 'tv' && item.season && item.episode;
+  const kicker = document.getElementById('mediaInfoKicker');
+  if (kicker) kicker.textContent = isEpisode ? `${item.title} · Episode` : 'Trending today';
+  document.getElementById('mediaInfoTitle').textContent = item.displayTitle || item.title;
   document.getElementById('mediaInfoMeta').textContent = [
     item.rating ? `★ ${item.rating}` : 'Not rated',
     item.year || 'N/A',
-    item.type === 'tv' ? 'TV Series' : 'Movie'
+    isEpisode ? `S${item.season} · E${item.episode}` : item.type === 'tv' ? 'TV Series' : 'Movie'
   ].join(' · ');
   document.getElementById('mediaInfoOverview').textContent = item.overview || 'No description available.';
-  action.textContent = item.type === 'tv' ? 'Browse seasons' : 'Play now';
+  action.textContent = isEpisode ? 'Play episode' : item.type === 'tv' ? 'Browse seasons' : 'Play now';
   action.onclick = () => {
     closeMediaInfo(false);
-    handleItemSelect(item, { playNow: item.type === 'movie' });
+    if (isEpisode) startPlayback(item);
+    else handleItemSelect(item, { playNow: item.type === 'movie' });
   };
+  if (window.DownloadLinks) window.DownloadLinks.prepare(item);
 
   document.body.classList.add('modal-open');
   overlay.classList.remove('hidden');
@@ -529,8 +539,10 @@ function closeMediaInfo(restoreFocus) {
   if (overlay) overlay.classList.add('hidden');
   document.body.classList.remove('modal-open');
   if (restoreFocus !== false) {
+    const returnFocus = state.mediaInfoReturnFocus;
     const infoBtn = document.getElementById('heroInfoBtn');
-    if (infoBtn) infoBtn.focus();
+    if (returnFocus && document.documentElement.contains(returnFocus)) returnFocus.focus();
+    else if (infoBtn) infoBtn.focus();
   }
 }
 
@@ -796,6 +808,20 @@ function renderEpisodesList(episodes) {
   }
 
   episodes.forEach(ep => {
+    const episodeItem = {
+      id: state.activeItem.id,
+      type: 'tv',
+      title: state.activeItem.title,
+      displayTitle: ep.name || `Episode ${ep.episode_number}`,
+      year: state.activeItem.year,
+      season: state.activeSeasonNumber,
+      episode: ep.episode_number,
+      episodeName: ep.name,
+      overview: ep.overview,
+      rating: ep.vote_average ? Number(ep.vote_average).toFixed(1) : '',
+      image: state.activeItem.image,
+      heroImage: ep.still_path ? `https://image.tmdb.org/t/p/w1280${ep.still_path}` : state.activeItem.heroImage
+    };
     const btn = document.createElement('button');
     btn.className = 'tv-item';
     btn.tabIndex = 0;
@@ -807,21 +833,11 @@ function renderEpisodesList(episodes) {
           <div class="item-meta">${formatEpisodeMeta(ep)}</div>
         </div>
       </div>
-      <div class="item-action-indicator">Play ▶</div>
+      <div class="item-action-indicator">More →</div>
     `;
 
     btn.addEventListener('click', () => {
-      startPlayback({
-        id: state.activeItem.id,
-        type: 'tv',
-        title: state.activeItem.title,
-        year: state.activeItem.year,
-        season: state.activeSeasonNumber,
-        episode: ep.episode_number,
-        episodeName: ep.name,
-        image: state.activeItem.image,
-        heroImage: state.activeItem.heroImage
-      });
+      showMediaInfo(episodeItem);
     });
 
     container.appendChild(btn);
@@ -2839,14 +2855,19 @@ function formatEpisodeMeta(episode) {
 // ==========================================
 // Utilities
 // ==========================================
+let toastTimer = null;
 function showToast(msg) {
   const toast = document.getElementById('toastNotification');
   if (!toast) return;
   toast.textContent = msg;
   toast.classList.remove('hidden');
-  setTimeout(() => {
+  toast.style.animation = 'none';
+  void toast.offsetHeight;
+  toast.style.animation = '';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
     toast.classList.add('hidden');
-  }, 2500);
+  }, 2600);
 }
 
 function escapeHtml(str) {
