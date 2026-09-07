@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=38">
+  <link rel="stylesheet" href="/style.css?v=42">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 <body>
@@ -144,33 +144,44 @@
           <!-- Bottom HUD Overlay: Unified Inline Bar (Play/Pause at side of progress bar) -->
           <div id="playerHudOverlay" class="player-hud-overlay">
             <div class="player-unified-bar">
-              <!-- Left: Play/Pause, Replay 10s, Forward 10s, Current Time -->
-              <div class="hud-inline-left">
-                <button type="button" id="playerPlayPauseBtn" class="tv-btn tv-btn-sm tv-btn-primary hud-btn-circle" onclick="togglePlayPause()" tabindex="0" title="Play/Pause" aria-label="Play or pause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
-                <button type="button" id="playerRewindBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(-10)" tabindex="0" title="Rewind 10s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5V2L8 6l4 4V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/><text x="12" y="15.5" font-size="7.5" font-weight="900" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg>10s</button>
-                <button type="button" id="playerForwardBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(10)" tabindex="0" title="Forward 10s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5V2l4 4-4 4V7a6 6 0 1 0 6 6h2a8 8 0 1 1-8-8z"/><text x="12" y="15.5" font-size="7.5" font-weight="900" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg>10s</button>
+              <div class="player-timeline-row">
                 <span id="playerCurrentTime" class="hud-time-val">0:00</span>
-              </div>
-
-              <!-- Center: The Progress Bar (flexible width) -->
-              <div class="player-timeline-wrap">
-                <div id="playerProgressBar" class="player-progress-bar" onclick="seekByClick(event)" role="slider" aria-label="Playback progress" tabindex="0">
-                  <div id="playerBufferFill" class="player-buffer-fill"></div>
-                  <div id="playerProgressFill" class="player-progress-fill"></div>
-                  <div id="playerProgressThumb" class="player-progress-thumb"></div>
+                <div class="player-timeline-wrap">
+                  <div id="playerProgressBar" class="player-progress-bar" onclick="seekByClick(event)" role="slider" aria-label="Playback progress" tabindex="0">
+                    <div id="playerBufferFill" class="player-buffer-fill"></div>
+                    <div id="playerProgressFill" class="player-progress-fill"></div>
+                    <div id="playerProgressThumb" class="player-progress-thumb"></div>
+                  </div>
                 </div>
-              </div>
-
-              <!-- Right: Duration, Next Ep, Settings, Fullscreen -->
-              <div class="hud-inline-right">
                 <span id="playerDuration" class="hud-time-val">0:00</span>
-                <button type="button" id="playerNextEpBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round hidden" onclick="playNextEpisode()" tabindex="0" title="Next Episode"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>Next</button>
-                <button type="button" id="playerSettingsBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="toggleSettingsDrawer()" tabindex="0" title="Settings (Quality, Subtitles, Audio, Embed)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>
-                <button type="button" id="playerRotateBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="toggleScreenRotation()" tabindex="0" title="Rotate Screen" aria-label="Rotate screen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14.93-4M20 12a8 8 0 0 1-14.93 4"/><polyline points="19 4 19 8 15 8"/><polyline points="5 20 5 16 9 16"/></svg></button>
-                <button type="button" id="playerFullscreenBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="togglePlayerFullscreen()" tabindex="0" title="Fullscreen" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+              </div>
+              <div class="player-actions-row">
+                <div class="hud-inline-left">
+                  <button type="button" id="playerPlayPauseBtn" class="tv-btn tv-btn-sm tv-btn-primary hud-btn-circle" onclick="togglePlayPause()" tabindex="0" title="Play/Pause" aria-label="Play or pause"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                  <button type="button" id="playerRewindBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(-10)" tabindex="0" title="Rewind 10 seconds" aria-label="Rewind 10 seconds"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8.2 8.5H3.8V4.1"/><path d="M4.2 8.1A10 10 0 1 1 4 18.8"/><text x="14" y="17.1" font-size="8" font-weight="800" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg></button>
+                  <button type="button" id="playerForwardBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="seekRelative(10)" tabindex="0" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.8 8.5h4.4V4.1"/><path d="M23.8 8.1A10 10 0 1 0 24 18.8"/><text x="14" y="17.1" font-size="8" font-weight="800" font-family="sans-serif" text-anchor="middle" fill="currentColor" stroke="none">10</text></svg></button>
+                </div>
+                <div class="hud-inline-right">
+                  <button type="button" id="playerNextEpBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round hidden" onclick="playNextEpisode()" tabindex="0" title="Next Episode"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"/></svg>Next</button>
+                  <button type="button" id="playerSubtitlesBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="toggleSubtitlesPopup(event)" tabindex="0" title="Subtitles (CC)" aria-label="Subtitles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M7 15h4M15 15h2M7 11h2M13 11h4"/></svg></button>
+                  <button type="button" id="playerQualityBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="toggleQualityPopup(event)" tabindex="0" title="Video Quality" aria-label="Video Quality"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg></button>
+                  <button type="button" id="playerSettingsBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-round" onclick="toggleSettingsDrawer()" tabindex="0" title="Settings (Quality, Subtitles, Audio, Embed)" aria-label="Player settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+                  <button type="button" id="playerFullscreenBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-icon" onclick="togglePlayerFullscreen()" tabindex="0" title="Fullscreen" aria-label="Toggle fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Small Floating Quick Popups for Quality & Subtitles -->
+        <div id="playerQualityPopup" class="player-quick-popup hidden" role="menu" aria-label="Select Quality">
+          <div class="quick-popup-header">Quality</div>
+          <div id="quickQualityList" class="quick-popup-list"></div>
+        </div>
+
+        <div id="playerSubtitlesPopup" class="player-quick-popup hidden" role="menu" aria-label="Select Subtitles">
+          <div class="quick-popup-header">Subtitles</div>
+          <div id="quickSubtitlesList" class="quick-popup-list"></div>
         </div>
 
         <!-- Glassmorphic Settings Drawer -->
@@ -395,7 +406,7 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/downloads.js?v=2"></script>
-  <script src="/app.js?v=37"></script>
+  <script src="/downloads.js?v=3"></script>
+  <script src="/app.js?v=40"></script>
 </body>
 </html>

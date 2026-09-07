@@ -5,7 +5,15 @@
 
   function isSmartTv() {
     var ua = navigator.userAgent || '';
-    return /VIDAA|SmartTV|SMART-TV|Tizen|Web0S|WebOS|NetCast|HbbTV|Android TV|BRAVIA|AFT\w|CrKey/i.test(ua);
+    if (/Hisense|VIDAA|SmartTV|SMART-TV|Tizen|Web0S|WebOS|NetCast|HbbTV|Android TV|GoogleTV|AppleTV|BRAVIA|AFT\w|CrKey|Roku|Vewd|Opera TV|Vestel|DTV|Insignia|TCL|MiTV|PhilipsTV|\bTV\b|LargeScreen/i.test(ua)) {
+      return true;
+    }
+    try {
+      if (window.matchMedia && (window.matchMedia('(tv)').matches || window.matchMedia('(display-mode: tv)').matches)) {
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   function linkFor(item, quality, format) {

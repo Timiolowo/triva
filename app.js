@@ -165,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadWatchHistory();
   loadFeaturedTitles();
   setupPlayerControlsAutoHide();
+  setupProgressBarDragging();
   setupRemoteNavigation();
   setupRouting();
 
@@ -924,6 +925,8 @@ function startPlayback(item, options) {
   if (menuAud) menuAud.textContent = 'Default';
   const menuSpd = document.getElementById('menuActiveSpeed');
   if (menuSpd) menuSpd.textContent = '1.0x (Normal)';
+  const subBtn = document.getElementById('playerSubtitlesBtn');
+  if (subBtn) subBtn.classList.remove('active');
   const menuFit = document.getElementById('menuActiveFit');
   if (menuFit) menuFit.textContent = 'Fit (Original)';
 
@@ -1491,6 +1494,7 @@ function setQualityLevel(levelIdx) {
   }
 
   updateQualityMenuChecks(levelIdx);
+  closeQuickPopups();
 }
 
 function updateQualityMenuChecks(activeIdx) {
@@ -1505,6 +1509,161 @@ function updateQualityMenuChecks(activeIdx) {
     const check = row.querySelector('.choice-check');
     if (check) check.classList.toggle('hidden', !isCurrent);
   });
+}
+
+function closeQuickPopups() {
+  const qPopup = document.getElementById('playerQualityPopup');
+  const sPopup = document.getElementById('playerSubtitlesPopup');
+  if (qPopup) qPopup.classList.add('hidden');
+  if (sPopup) sPopup.classList.add('hidden');
+}
+
+function toggleQualityPopup(event) {
+  if (event) event.stopPropagation();
+  closeSettingsDrawer();
+  const sPopup = document.getElementById('playerSubtitlesPopup');
+  if (sPopup) sPopup.classList.add('hidden');
+
+  const popup = document.getElementById('playerQualityPopup');
+  if (!popup) return;
+
+  const isClosed = popup.classList.contains('hidden');
+  if (isClosed) {
+    renderQualityPopup();
+    popup.classList.remove('hidden');
+    setTimeout(() => {
+      const activeBtn = popup.querySelector('.quick-popup-item.active') || popup.querySelector('.quick-popup-item');
+      if (activeBtn) activeBtn.focus();
+    }, 40);
+  } else {
+    popup.classList.add('hidden');
+    const qBtn = document.getElementById('playerQualityBtn');
+    if (qBtn) qBtn.focus();
+  }
+}
+
+function toggleSubtitlesPopup(event) {
+  if (event) event.stopPropagation();
+  closeSettingsDrawer();
+  const qPopup = document.getElementById('playerQualityPopup');
+  if (qPopup) qPopup.classList.add('hidden');
+
+  const popup = document.getElementById('playerSubtitlesPopup');
+  if (!popup) return;
+
+  const isClosed = popup.classList.contains('hidden');
+  if (isClosed) {
+    renderSubtitlesPopup();
+    popup.classList.remove('hidden');
+    setTimeout(() => {
+      const activeBtn = popup.querySelector('.quick-popup-item.active') || popup.querySelector('.quick-popup-item');
+      if (activeBtn) activeBtn.focus();
+    }, 40);
+  } else {
+    popup.classList.add('hidden');
+    const sBtn = document.getElementById('playerSubtitlesBtn');
+    if (sBtn) sBtn.focus();
+  }
+}
+
+function renderQualityPopup() {
+  const container = document.getElementById('quickQualityList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // 1. Auto Option
+  const autoBtn = document.createElement('button');
+  autoBtn.type = 'button';
+  autoBtn.className = `quick-popup-item ${state.currentQualityLevel === -1 ? 'active' : ''}`;
+  autoBtn.tabIndex = 0;
+  autoBtn.innerHTML = `
+    <span>Auto</span>
+    <span class="quick-popup-check ${state.currentQualityLevel === -1 ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+  `;
+  autoBtn.onclick = (e) => {
+    e.stopPropagation();
+    setQualityLevel(-1);
+  };
+  container.appendChild(autoBtn);
+
+  // 2. Specific resolutions from HLS
+  if (state.availableLevels && state.availableLevels.length > 0) {
+    const seenHeights = new Set();
+    const sortedLevels = [...state.availableLevels].sort((a, b) => b.height - a.height);
+    sortedLevels.forEach(lvl => {
+      if (seenHeights.has(lvl.height)) return;
+      seenHeights.add(lvl.height);
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `quick-popup-item ${state.currentQualityLevel === lvl.index ? 'active' : ''}`;
+      btn.tabIndex = 0;
+      btn.innerHTML = `
+        <span>${escapeHtml(lvl.label)}</span>
+        <span class="quick-popup-check ${state.currentQualityLevel === lvl.index ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+      `;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        setQualityLevel(lvl.index);
+      };
+      container.appendChild(btn);
+    });
+  }
+}
+
+function renderSubtitlesPopup() {
+  const container = document.getElementById('quickSubtitlesList');
+  if (!container) return;
+  container.innerHTML = '';
+
+  // 1. Off option
+  const isOff = !state.activeSubtitleId || state.activeSubtitleId === 'off';
+  const offBtn = document.createElement('button');
+  offBtn.type = 'button';
+  offBtn.className = `quick-popup-item ${isOff ? 'active' : ''}`;
+  offBtn.tabIndex = 0;
+  offBtn.innerHTML = `
+    <span>Off</span>
+    <span class="quick-popup-check ${isOff ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+  `;
+  offBtn.onclick = (e) => {
+    e.stopPropagation();
+    selectSubtitle('off', 'Off', 'off');
+  };
+  container.appendChild(offBtn);
+
+  // 2. Available subtitles
+  if (state.availableSubtitles && state.availableSubtitles.length > 0) {
+    state.availableSubtitles.forEach(sub => {
+      const isAct = state.activeSubtitleId === sub.url;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `quick-popup-item ${isAct ? 'active' : ''}`;
+      btn.tabIndex = 0;
+      btn.innerHTML = `
+        <span>${escapeHtml(sub.label)}</span>
+        <span class="quick-popup-check ${isAct ? '' : 'hidden'}">${SVG_ICONS.check}</span>
+      `;
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        selectSubtitle(sub.url, sub.label, sub.lang);
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  // 3. More settings link
+  const settingsBtn = document.createElement('button');
+  settingsBtn.type = 'button';
+  settingsBtn.className = 'quick-popup-item quick-popup-footer-item';
+  settingsBtn.tabIndex = 0;
+  settingsBtn.innerHTML = `<span>More Subtitle Options ›</span>`;
+  settingsBtn.onclick = (e) => {
+    e.stopPropagation();
+    closeQuickPopups();
+    openDrawerSubmenu('subtitles');
+  };
+  container.appendChild(settingsBtn);
 }
 
 // ==========================================
@@ -1618,6 +1777,8 @@ function selectSubtitle(subUrl, label, lang, silent = false) {
 
   state.activeSubtitleId = subUrl;
   const menuSub = document.getElementById('menuActiveSubtitle');
+  const subBtn = document.getElementById('playerSubtitlesBtn');
+  if (subBtn) subBtn.classList.toggle('active', subUrl !== 'off');
 
   // Remove existing tracks
   while (video.firstChild) {
@@ -1655,6 +1816,7 @@ function selectSubtitle(subUrl, label, lang, silent = false) {
       if (check) check.classList.toggle('hidden', !isMatch);
     });
   }
+  closeQuickPopups();
 }
 
 function switchSubtitleTab(tab) {
@@ -1876,6 +2038,7 @@ function toggleSettingsDrawer() {
 }
 
 function openSettingsDrawer() {
+  closeQuickPopups();
   const drawer = document.getElementById('playerSettingsDrawer');
   if (!drawer) return;
   drawer.classList.remove('hidden');
@@ -2002,9 +2165,48 @@ function seekByClick(event) {
   const video = document.getElementById('nativeVideoPlayer');
   if (!bar || !video || !video.duration) return;
   const rect = bar.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
+  const clientX = (event.touches && event.touches.length) ? event.touches[0].clientX : event.clientX;
+  if (clientX === undefined) return;
+  const clickX = clientX - rect.left;
   const pct = Math.max(0, Math.min(1, clickX / rect.width));
   video.currentTime = pct * video.duration;
+}
+
+function setupProgressBarDragging() {
+  const bar = document.getElementById('playerProgressBar');
+  const video = document.getElementById('nativeVideoPlayer');
+  if (!bar || !video) return;
+
+  let isDragging = false;
+
+  const seek = (clientX) => {
+    if (!video.duration || clientX === undefined) return;
+    const rect = bar.getBoundingClientRect();
+    const clickX = clientX - rect.left;
+    const pct = Math.max(0, Math.min(1, clickX / rect.width));
+    video.currentTime = pct * video.duration;
+  };
+
+  bar.addEventListener('pointerdown', (e) => {
+    isDragging = true;
+    try { bar.setPointerCapture(e.pointerId); } catch (_) {}
+    seek(e.clientX);
+  });
+
+  bar.addEventListener('pointermove', (e) => {
+    if (!isDragging) return;
+    seek(e.clientX);
+  });
+
+  const stop = (e) => {
+    if (isDragging) {
+      isDragging = false;
+      try { bar.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+  };
+
+  bar.addEventListener('pointerup', stop);
+  bar.addEventListener('pointercancel', stop);
 }
 
 function playNextEpisode() {
@@ -2262,6 +2464,7 @@ function stopPlayer() {
   clearInterval(state.stallWatchdogTimer);
   state.stallWatchdogTimer = null;
   closeSettingsDrawer();
+  closeQuickPopups();
   if (fallbackDismissTimer) {
     clearTimeout(fallbackDismissTimer);
     fallbackDismissTimer = null;
@@ -2652,6 +2855,19 @@ function clearWatchHistory() {
 // Spatial Smart TV Remote Navigation Engine
 // ==========================================
 function setupRemoteNavigation() {
+  document.addEventListener('click', (e) => {
+    const qPopup = document.getElementById('playerQualityPopup');
+    const sPopup = document.getElementById('playerSubtitlesPopup');
+    const qBtn = document.getElementById('playerQualityBtn');
+    const sBtn = document.getElementById('playerSubtitlesBtn');
+    if (qPopup && !qPopup.classList.contains('hidden') && !qPopup.contains(e.target) && !qBtn?.contains(e.target)) {
+      qPopup.classList.add('hidden');
+    }
+    if (sPopup && !sPopup.classList.contains('hidden') && !sPopup.contains(e.target) && !sBtn?.contains(e.target)) {
+      sPopup.classList.add('hidden');
+    }
+  });
+
   document.addEventListener('keydown', (e) => {
     const action = getRemoteAction(e);
     const searchForm = document.getElementById('searchForm');
@@ -2671,6 +2887,13 @@ function setupRemoteNavigation() {
     }
 
     if (action === 'back') {
+      const qPopup = document.getElementById('playerQualityPopup');
+      const sPopup = document.getElementById('playerSubtitlesPopup');
+      if ((qPopup && !qPopup.classList.contains('hidden')) || (sPopup && !sPopup.classList.contains('hidden'))) {
+        e.preventDefault();
+        closeQuickPopups();
+        return;
+      }
       if (state.currentView === 'player') {
         e.preventDefault();
         exitPlayer();
