@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=42">
+  <link rel="stylesheet" href="/style.css?v=50">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 <body>
@@ -74,8 +74,8 @@
       </section>
 
       <section id="resultsView" class="view-section hidden">
-        <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Home</button><div><p class="section-kicker">Choose a title to start</p><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
-        <div id="resultsList" class="tv-list"></div>
+        <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Home</button><div><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
+        <div id="resultsList" class="search-results-grid"></div>
       </section>
 
       <section id="tvShowView" class="view-section hidden">
@@ -394,10 +394,16 @@
             <button type="button" id="mediaInfoDownload" class="tv-btn tv-btn-primary hidden" onclick="DownloadLinks.showOptions()">Download</button>
           </div>
           <div id="downloadPanel" class="download-panel hidden">
-            <label for="downloadQuality">Video quality</label>
-            <select id="downloadQuality" class="tv-select" disabled></select>
-            <div class="download-actions">
-              <button type="button" class="tv-btn tv-btn-primary tv-btn-sm" onclick="DownloadLinks.copyLink()">Copy link</button>
+            <div id="downloadChecking" class="download-checking hidden">
+              <div class="download-spinner"></div>
+              <span>Checking available qualities…</span>
+            </div>
+            <div id="downloadReady" class="download-ready hidden">
+              <label for="downloadQuality">Video quality</label>
+              <select id="downloadQuality" class="tv-select"></select>
+              <div class="download-actions">
+                <button type="button" class="tv-btn tv-btn-primary tv-btn-sm" onclick="DownloadLinks.copyLink()">Copy link</button>
+              </div>
             </div>
             <p id="downloadStatus" class="download-status" role="status" aria-live="polite"></p>
           </div>
@@ -406,7 +412,12 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/downloads.js?v=3"></script>
-  <script src="/app.js?v=40"></script>
+  <script src="/state.js?v=1"></script>
+  <script src="/content.js?v=5"></script>
+  <script src="/player.js?v=3"></script>
+  <script src="/navigation.js?v=1"></script>
+  <script src="/app.js?v=42"></script>
+  <script src="/downloads.js?v=5"></script>
+  <script src="/remote.js?v=1"></script>
 </body>
 </html>
