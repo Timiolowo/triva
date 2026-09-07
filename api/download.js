@@ -24,27 +24,38 @@ function parseMasterPlaylist(text) {
   return { audioLines, variants };
 }
 
-function buildSelectedPlaylist(audioLines, variant) {
+function buildSelectedPlaylist(audioLines, variant, proxyBase) {
+  const processedAudioLines = audioLines.map(line => {
+    if (!proxyBase) return line;
+    return line.replace(/URI="([^"]+)"/g, (match, uri) => {
+      return `URI="${proxyBase}?url=${encodeURIComponent(uri)}"`;
+    });
+  });
+
+  const variantUrl = proxyBase
+    ? `${proxyBase}?url=${encodeURIComponent(variant.url)}`
+    : variant.url;
+
   return [
     '#EXTM3U',
     '#EXT-X-VERSION:7',
     '#EXT-X-INDEPENDENT-SEGMENTS',
     '',
-    ...audioLines,
+    ...processedAudioLines,
     '',
     variant.info,
-    variant.url,
+    variantUrl,
     ''
   ].join('\n');
 }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Allow', 'GET, HEAD');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -64,18 +75,17 @@ module.exports = async function handler(req, res) {
 
     const upstream = await fetch(source.url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Origin': 'https://cinejoy.to',
         'Referer': 'https://cinejoy.to/'
       }
     });
-    if (upstream.status === 451 || upstream.status === 403 || upstream.status === 404) {
+    if (!upstream.ok) {
       res.setHeader('Cache-Control', 'no-store');
-      return res.status(404).json({
+      return res.status(upstream.status >= 400 && upstream.status < 500 ? 404 : 502).json({
         error: `A download link is not available for this ${mediaType === 'tv' ? 'episode' : 'movie'}.`
       });
     }
-    if (!upstream.ok) throw new Error(`Playlist request failed: HTTP ${upstream.status}`);
 
     const parsed = parseMasterPlaylist(await upstream.text());
     const qualities = [...new Set(parsed.variants.map(item => item.height))].sort((a, b) => b - a);
@@ -92,13 +102,24 @@ module.exports = async function handler(req, res) {
     const selected = parsed.variants.find(item => item.height === requestedHeight);
     if (!selected) return res.status(404).json({ error: 'Requested quality is unavailable' });
 
+    const proto = req.headers['x-forwarded-proto'] || (req.socket && req.socket.encrypted ? 'https' : 'http');
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
+    const proxyBase = `${proto}://${host}/api/proxy`;
+
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl; charset=utf-8');
     const filename = mediaType === 'tv'
       ? `series-${id}-s${season}e${episode}-${requestedHeight}p.m3u8`
       : `movie-${id}-${requestedHeight}p.m3u8`;
     res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
     res.setHeader('Cache-Control', 'no-store');
-    return res.status(200).end(buildSelectedPlaylist(parsed.audioLines, selected));
+
+    const playlistBody = buildSelectedPlaylist(parsed.audioLines, selected, proxyBase);
+    if (req.method === 'HEAD') {
+      res.setHeader('Content-Length', Buffer.byteLength(playlistBody, 'utf8'));
+      return res.status(200).end();
+    }
+
+    return res.status(200).end(playlistBody);
   } catch (error) {
     console.error('[API/DOWNLOAD ERROR]', error.message);
     return res.status(502).json({ error: 'Download link is temporarily unavailable' });

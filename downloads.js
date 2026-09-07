@@ -64,6 +64,7 @@
 
     panel.classList.remove('hidden');
     button.disabled = true;
+    button.textContent = 'Checking…';
     select.disabled = true;
     setStatus('Checking available qualities…');
 
@@ -81,14 +82,17 @@
         select.appendChild(option);
       });
       select.disabled = false;
+      button.textContent = 'Download';
+      button.disabled = false;
       setStatus('Copy the link into VLC or your HLS downloader.');
       select.focus();
     } catch (error) {
       panel.classList.add('hidden');
       setStatus('');
-      if (typeof window.showToast === 'function') window.showToast(error.message || 'Download link is temporarily unavailable');
-    } finally {
-      button.disabled = false;
+      button.textContent = 'Unavailable';
+      button.disabled = true;
+      button.classList.add('btn-unavailable');
+      if (typeof window.showToast === 'function') window.showToast(error.message || 'Download is unavailable for this title');
     }
   }
 
@@ -100,7 +104,12 @@
       var panel = document.getElementById('downloadPanel');
       if (panel) panel.classList.add('hidden');
       setStatus('');
-      if (button) button.classList.toggle('hidden', !activeItem || isSmartTv());
+      if (button) {
+        button.textContent = 'Download';
+        button.disabled = false;
+        button.classList.remove('btn-unavailable');
+        button.classList.toggle('hidden', !activeItem || isSmartTv());
+      }
     },
     showOptions: showOptions,
     copyLink: copyLink

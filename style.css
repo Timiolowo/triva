@@ -68,7 +68,7 @@ button { cursor: pointer; }
 .featured-card-image { width: 100%; height: 100%; position: absolute; inset: 0; top: 0; right: 0; bottom: 0; left: 0; z-index: 0; object-fit: cover; }
 .featured-card::before { content: ""; position: absolute; inset: 0; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; background: linear-gradient(0deg, rgba(8,8,8,.96) 0%, rgba(8,8,8,.65) 40%, rgba(8,8,8,.06) 75%); }
 .featured-card-copy { width: 100%; position: relative; z-index: 2; padding: 16px 14px; }
-.featured-card-title { display: block; font-size: 16px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+.featured-card-title { display: block; font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
 .featured-card-meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 6px; color: #c4c0b7; font-size: 12px; }
 .featured-card-action { color: var(--accent); font-weight: 750; white-space: nowrap; flex-shrink: 0; }
 .featured-card-rank, .featured-card-rating { position: absolute; top: 10px; z-index: 3; padding: 3px 8px; border-radius: 5px; background: rgba(8, 8, 8, .82); color: var(--text); font-size: 11px; font-weight: 800; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); }
@@ -89,12 +89,13 @@ button { cursor: pointer; }
 
 .media-info-overlay { position: fixed; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(0,0,0,.58); backdrop-filter: blur(12px) saturate(120%); -webkit-backdrop-filter: blur(12px) saturate(120%); }
 body.modal-open { overflow: hidden; }
-.media-info-card { width: min(560px, 100%); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: 18px; background: rgba(20,20,18,.48); box-shadow: 0 24px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.18); backdrop-filter: blur(30px) saturate(155%); -webkit-backdrop-filter: blur(30px) saturate(155%); }
-.media-info-artwork { display: none; width: 100%; aspect-ratio: 16 / 8; object-fit: cover; object-position: center; background: #0d0d0c; }
+.media-info-card { width: min(560px, 100%); position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,.22); border-radius: 18px; background: #11110f; box-shadow: 0 24px 80px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.18); }
+.media-info-card::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(to bottom, rgba(7,7,6,.04) 0%, rgba(7,7,6,.12) 24%, rgba(7,7,6,.72) 50%, rgba(7,7,6,.94) 68%, rgba(7,7,6,.98) 100%); pointer-events: none; }
+.media-info-artwork { display: none; width: 100%; height: 100%; position: absolute; inset: 0; z-index: 0; object-fit: cover; object-position: center top; background: #0d0d0c; }
 .media-info-card.has-artwork .media-info-artwork { display: block; }
-.media-info-content { position: relative; isolation: isolate; padding: 28px 34px 34px; border-top: 1px solid rgba(255,255,255,.13); background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.045) 42%, rgba(8,8,7,.22)); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); backdrop-filter: blur(32px) saturate(165%); -webkit-backdrop-filter: blur(32px) saturate(165%); }
-.media-info-content::before { content: ""; position: absolute; z-index: -1; width: 75%; height: 70%; top: -36%; left: -22%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.16), transparent 68%); pointer-events: none; }
-.media-info-close { width: 44px; height: 44px; position: absolute; top: 16px; right: 16px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; background: rgba(255,255,255,.09); color: var(--text); font-size: 26px; box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
+.media-info-content { position: relative; z-index: 2; padding: 28px 34px 34px; }
+.media-info-card.has-artwork .media-info-content { padding-top: calc(50% + 28px); }
+.media-info-close { width: 44px; height: 44px; position: absolute; top: 16px; right: 16px; z-index: 3; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; background: rgba(255,255,255,.09); color: var(--text); font-size: 26px; box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
 .media-info-close:focus { outline: 0; }
 .media-info-close:focus-visible { outline: 2px solid rgba(255,255,255,.82); outline-offset: 2px; }
 .media-info-card .section-kicker { color: var(--muted); }
@@ -103,6 +104,8 @@ body.modal-open { overflow: hidden; }
 .media-info-card .tv-btn-primary { border: 1px solid rgba(255,255,255,.22); border-radius: 999px; background: rgba(255,255,255,.14); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.1); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
 .media-info-card .tv-btn-primary:hover,
 .media-info-card .tv-btn-primary:focus { border-color: rgba(255,255,255,.32); background: rgba(255,255,255,.2); color: #fff; }
+.media-info-card .tv-btn-primary.btn-unavailable { opacity: 0.55; cursor: not-allowed; filter: grayscale(1); border-color: rgba(255,255,255,.1); }
+.media-info-card .tv-btn-primary.btn-unavailable:hover { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.1); }
 .media-info-actions, .download-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .download-panel { position: relative; isolation: isolate; overflow: hidden; margin-top: 16px; padding: 16px; border: 1px solid rgba(255,255,255,.22); border-radius: 18px; background: linear-gradient(145deg, rgba(255,255,255,.12), rgba(255,255,255,.035) 48%, rgba(10,10,9,.2)); box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -1px 0 rgba(255,255,255,.04), 0 14px 36px rgba(0,0,0,.22); backdrop-filter: blur(24px) saturate(155%); -webkit-backdrop-filter: blur(24px) saturate(155%); }
 .download-panel::before { content: ""; position: absolute; z-index: -1; width: 70%; height: 100%; top: -55%; left: -18%; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.19), transparent 68%); pointer-events: none; }
@@ -633,7 +636,7 @@ body.modal-open { overflow: hidden; }
   .tv-list { grid-template-columns: 1fr; gap: 10px; }
   .featured-card { aspect-ratio: 2 / 3; }
   .featured-card-copy { padding: 10px 8px; }
-  .featured-card-title { font-size: 13px; font-weight: 700; }
+  .featured-card-title { font-size: 12px; font-weight: 700; }
   .featured-card-meta { font-size: 10px; margin-top: 3px; gap: 4px; }
   .featured-card-action { font-size: 10px; }
   .featured-card-rank, .featured-card-rating { top: 6px; padding: 2px 5px; font-size: 9px; }
@@ -649,7 +652,7 @@ body.modal-open { overflow: hidden; }
 @media (min-width: 1000px) {
   .nav-tab { min-height: 40px; font-size: 15px; }
   .header-search-trigger { min-height: 40px; font-size: 15px; }
-  .featured-card-title { font-size: 20px; }
+  .featured-card-title { font-size: 16px; }
   .featured-card-meta { font-size: 14px; }
   .tv-btn:focus-visible,
   .tv-item:focus-visible,
@@ -784,7 +787,7 @@ body.modal-open { overflow: hidden; }
     border-radius: 10px;
   }
   .featured-card-copy { padding: 12px 10px; }
-  .featured-card-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
+  .featured-card-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.25; }
   .featured-card-meta { font-size: 11px; margin-top: 4px; gap: 4px; }
   .featured-card-action { font-size: 11px; white-space: nowrap; }
   .featured-card-rank, .featured-card-rating { top: 8px; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
@@ -823,8 +826,8 @@ body.modal-open { overflow: hidden; }
 
   .media-info-overlay { align-items: flex-end; padding: 0; }
   .media-info-card { border-radius: 18px 18px 0 0; }
-  .media-info-artwork { aspect-ratio: 16 / 8.5; }
   .media-info-content { padding: 22px 20px calc(24px + env(safe-area-inset-bottom)); }
+  .media-info-card.has-artwork .media-info-content { padding-top: calc(53.125% + 22px); }
   .media-info-title { font-size: 30px; }
   .media-info-overview { max-height: 30vh; overflow-y: auto; font-size: 14px; }
 
