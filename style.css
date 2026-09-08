@@ -3267,6 +3267,159 @@ video::cue {
   to { transform: rotate(360deg); }
 }
 
+.sync-btn-check {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  animation: syncCheckPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform;
+}
+
+@keyframes syncCheckPop {
+  0% { transform: scale(0); opacity: 0; }
+  75% { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.sync-connect-btn.is-connected {
+  background: #34d399 !important;
+  color: #064e3b !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 0 18px rgba(52, 211, 153, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+.sync-connect-btn.is-error {
+  background: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Beautiful UI (https://www.beautifului.dev) Task Row Primitives - 100% GPU, Zero-Cost */
+@keyframes bui-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bui-pop-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  75% { transform: scale(1.16); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes bui-fade-in {
+  0% { opacity: 0; transform: translateY(3px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.bui-task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 10px;
+  animation: bui-fade-in 200ms ease-out both;
+}
+
+.bui-task-label {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bui-task-amount {
+  font-size: 12px;
+  color: #9ca3af;
+  font-family: ui-monospace, monospace;
+}
+
+.bui-spinner-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.bui-spinner-ring svg {
+  width: 20px;
+  height: 20px;
+  animation: bui-spin 1.1s linear infinite;
+  will-change: transform;
+}
+
+.bui-badge-green {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: #10b981;
+  color: #ffffff;
+  animation: bui-pop-in 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.bui-badge-red {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #ffffff;
+  animation: bui-pop-in 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.bui-pill-green {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #34d399;
+  animation: bui-fade-in 200ms ease-out both;
+}
+
+.bui-pill-red {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.16);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f87171;
+  animation: bui-fade-in 200ms ease-out both;
+}
+
+.bui-spin {
+  animation: bui-spin 1.2s linear infinite;
+  display: inline-flex;
+  will-change: transform;
+}
+
 .sync-actions-row {
   display: flex;
   align-items: center;

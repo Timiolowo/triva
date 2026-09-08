@@ -600,81 +600,10 @@ function closeSyncModal() {
   document.body.classList.remove('modal-open');
 }
 
-function applyCustomSyncKey() {
-  const input = document.getElementById('customSyncKeyInput');
-  const btn = document.getElementById('syncConnectBtn');
-  const btnText = document.getElementById('syncConnectBtnText');
-  const btnIcon = document.getElementById('syncConnectBtnIcon');
-  const btnSpinner = document.getElementById('syncConnectBtnSpinner');
-
-  if (!input) return;
-  const val = (input.value || '').trim().toUpperCase();
-  if (!val) {
-    showToast('Please enter a Sync Key');
-    input.focus();
-    return;
-  }
-
-  // Visual connecting animation (GPU-composited, 0 TV memory overhead)
-  if (btn) {
-    btn.disabled = true;
-    btn.classList.add('is-connecting');
-  }
-  if (btnText) btnText.textContent = 'Connecting...';
-  if (btnIcon) btnIcon.classList.add('hidden');
-  if (btnSpinner) btnSpinner.classList.remove('hidden');
-
-  const cleanupBtn = (newText = 'Connect') => {
-    if (btn) {
-      btn.disabled = false;
-      btn.classList.remove('is-connecting');
-    }
-    if (btnText) btnText.textContent = newText;
-    if (btnIcon) btnIcon.classList.remove('hidden');
-    if (btnSpinner) btnSpinner.classList.add('hidden');
-  };
-
-  try {
-    localStorage.setItem('tivra_sync_key', val);
-    pushAllLocalHistory(val)
-      .then(() => fetchRemoteHistory(true))
-      .then(() => {
-        if (btnText) btnText.textContent = 'Connected!';
-        showToast(`Connected to Household: ${val}`);
-        setTimeout(() => {
-          closeSyncModal();
-          cleanupBtn('Connect');
-        }, 450);
-      })
-      .catch(() => {
-        showToast(`Connected to Household: ${val}`);
-        closeSyncModal();
-        cleanupBtn('Connect');
-      });
-  } catch (e) {
-    showToast('Failed to save key');
-    cleanupBtn('Connect');
-  }
-}
-
-function resetToWifiSync() {
-  setSyncKey('');
-  closeSyncModal();
-}
-
 // Auto-sync lifecycle triggers
 if (typeof window !== 'undefined') {
   const initSyncEvents = () => {
     fetchRemoteHistory(true);
-    const input = document.getElementById('customSyncKeyInput');
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          applyCustomSyncKey();
-        }
-      });
-    }
   };
 
   if (document.readyState === 'loading') {
