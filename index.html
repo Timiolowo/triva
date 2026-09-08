@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=70">
+  <link rel="stylesheet" href="/style.css?v=71">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 
@@ -289,7 +289,7 @@
               </div>
               <div class="player-actions-row">
                 <div class="hud-inline-left">
-                  <button type="button" id="playerPlayPauseBtn" class="tv-btn tv-btn-sm tv-btn-primary hud-btn-circle"
+                  <button type="button" id="playerPlayPauseBtn" class="tv-btn tv-btn-sm tv-btn-secondary hud-btn-circle"
                     onclick="togglePlayPause()" tabindex="0" title="Play/Pause" aria-label="Play or pause"><svg
                       viewBox="0 0 24 24" fill="currentColor">
                       <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
@@ -736,11 +736,18 @@
             <p class="sync-input-hint">Enter your personal household code (e.g. HOME-XXX)</p>
             <div class="sync-input-group">
               <input type="text" id="customSyncKeyInput" class="sync-input" placeholder="e.g. HOME-XXX" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="characters" tabindex="0">
-              <button type="button" id="syncConnectBtn" class="tv-btn tv-btn-primary sync-connect-btn" onclick="applyCustomSyncKey()" tabindex="0" title="Connect Key">
+              <button type="button" id="resetWifiSyncBtn" class="tv-btn sync-reset-btn" onclick="resetToWifiSync()" tabindex="0" title="Reset to Home Wi-Fi">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+                <span>Reset</span>
+              </button>
+              <button type="button" id="syncConnectBtn" class="tv-btn tv-btn-secondary sync-connect-btn" onclick="applyCustomSyncKey()" tabindex="0" title="Connect Key">
                 <span id="syncConnectBtnSpinner" class="bui-spinner-ring hidden" aria-hidden="true">
                   <svg viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="9" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2.2" />
-                    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="16 40" />
+                    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="16 40" class="bui-spin" />
                   </svg>
                 </span>
                 <span id="syncConnectBtnSuccess" class="bui-badge-green hidden" aria-hidden="true">
@@ -753,14 +760,25 @@
                 </svg>
               </button>
             </div>
-            <div id="syncFeedbackRow" class="bui-task-row hidden">
-              <span id="syncFeedbackBadge"></span>
-              <span id="syncFeedbackLabel" class="bui-task-label">Connecting to household...</span>
-              <span id="syncFeedbackAmount" class="bui-task-amount"></span>
-              <span id="syncFeedbackPill"></span>
-            </div>
-            <div class="sync-actions-row">
-              <button type="button" id="resetWifiSyncBtn" class="tv-btn tv-btn-secondary tv-btn-sm hidden" onclick="resetToWifiSync()" tabindex="0">Reset to Home Wi-Fi Sync</button>
+            <div id="syncTasksCard" class="bui-tasks-card hidden">
+              <div class="bui-task-row" id="buiRow1">
+                <span class="bui-task-badge-wrap" id="buiBadge1"></span>
+                <span class="bui-task-label">Connecting to household</span>
+                <span class="bui-task-amount" id="buiAmount1"></span>
+                <span class="bui-task-pill-wrap" id="buiPill1"></span>
+              </div>
+              <div class="bui-task-row" id="buiRow2">
+                <span class="bui-task-badge-wrap" id="buiBadge2"></span>
+                <span class="bui-task-label">Syncing watch history & progress</span>
+                <span class="bui-task-amount" id="buiAmount2"></span>
+                <span class="bui-task-pill-wrap" id="buiPill2"></span>
+              </div>
+              <div class="bui-task-row" id="buiRow3">
+                <span class="bui-task-badge-wrap" id="buiBadge3"></span>
+                <span class="bui-task-label">Pairing devices & session</span>
+                <span class="bui-task-amount" id="buiAmount3"></span>
+                <span class="bui-task-pill-wrap" id="buiPill3"></span>
+              </div>
             </div>
           </div>
         </div>
@@ -768,8 +786,8 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/state.js?v=7"></script>
-  <script src="/sync-ui.js?v=2"></script>
+  <script src="/state.js?v=8"></script>
+  <script src="/sync-ui.js?v=3"></script>
   <script src="/content.js?v=11"></script>
   <script src="/player.js?v=5"></script>
   <script src="/navigation.js?v=3"></script>

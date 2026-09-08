@@ -1,7 +1,7 @@
 // ============================================================================
 // Tivra TV - Household Sync UI & Beautiful UI Micro-Interactions
 // Adapted from Beautiful UI (https://www.beautifului.dev) Task Rows & Spinner Ring
-// Pure GPU-composited, zero CPU reflows, TV-safe memory footprint
+// 3-Step Sequence (~10s) with Frosted Glassmorphic Button & Pure GPU Transitions
 // ============================================================================
 
 (function() {
@@ -15,61 +15,139 @@
   };
 
   /**
-   * Render the Beautiful UI Task Row feedback state
-   * @param {'idle' | 'running' | 'done' | 'failed'} status 
-   * @param {string} label 
-   * @param {string} amount 
+   * Beautiful UI Spinner Ring component
    */
-  function renderTaskRow(status, label = '', amount = '') {
-    const row = document.getElementById('syncFeedbackRow');
-    const badgeEl = document.getElementById('syncFeedbackBadge');
-    const labelEl = document.getElementById('syncFeedbackLabel');
-    const amountEl = document.getElementById('syncFeedbackAmount');
-    const pillEl = document.getElementById('syncFeedbackPill');
+  function renderSpinnerRing(active, stepNumber) {
+    const size = 22, stroke = 2;
+    const r = (size - stroke) / 2; // 10
+    const c = 2 * Math.PI * r;     // ~62.8
+    return `
+      <span class="bui-spinner-ring">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="${stroke}" />
+          ${active ? `
+            <circle cx="${size / 2}" cy="${size / 2}" r="${r}" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="${stroke}" stroke-linecap="round" stroke-dasharray="${(c * 0.28).toFixed(1)} ${(c * 0.72).toFixed(1)}" class="bui-spin" />
+          ` : ''}
+        </svg>
+        <span class="bui-spinner-step" style="color:${active ? '#fff' : 'rgba(255,255,255,0.45)'};">${stepNumber}</span>
+      </span>
+    `;
+  }
 
-    if (!row) return;
+  function renderBadge(tone, iconHtml) {
+    return `<span class="${tone === 'green' ? 'bui-badge-green' : 'bui-badge-red'}">${iconHtml}</span>`;
+  }
 
-    if (status === 'idle') {
-      row.classList.add('hidden');
+  function renderPill(tone, text, iconHtml = '') {
+    return `<span class="${tone === 'green' ? 'bui-pill-green' : 'bui-pill-red'}">${text}${iconHtml ? ' ' + iconHtml : ''}</span>`;
+  }
+
+  let activeSyncTimers = [];
+
+  function clearSyncTimers() {
+    activeSyncTimers.forEach(t => clearTimeout(t));
+    activeSyncTimers = [];
+  }
+
+  /**
+   * Update the 3 Beautiful UI Task Rows
+   */
+  function updateTaskRows(step, code = '', customLabel = '') {
+    const card = document.getElementById('syncTasksCard');
+    const row1 = document.getElementById('buiRow1');
+    const row2 = document.getElementById('buiRow2');
+    const row3 = document.getElementById('buiRow3');
+
+    const badge1 = document.getElementById('buiBadge1');
+    const badge2 = document.getElementById('buiBadge2');
+    const badge3 = document.getElementById('buiBadge3');
+
+    const amount1 = document.getElementById('buiAmount1');
+    const amount2 = document.getElementById('buiAmount2');
+    const amount3 = document.getElementById('buiAmount3');
+
+    const pill1 = document.getElementById('buiPill1');
+    const pill2 = document.getElementById('buiPill2');
+    const pill3 = document.getElementById('buiPill3');
+
+    if (!card) return;
+
+    if (step === 0) {
+      card.classList.add('hidden');
       return;
     }
 
-    row.classList.remove('hidden');
-    if (labelEl) labelEl.textContent = label;
-    if (amountEl) amountEl.textContent = amount;
+    card.classList.remove('hidden');
 
-    if (status === 'running') {
-      if (badgeEl) {
-        badgeEl.className = 'bui-spinner-ring';
-        badgeEl.innerHTML = `
-          <svg viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="2.2" />
-            <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="16 40" />
-          </svg>
-        `;
-      }
-      if (pillEl) pillEl.innerHTML = '';
-    } else if (status === 'done') {
-      if (badgeEl) {
-        badgeEl.className = 'bui-badge-green';
-        badgeEl.innerHTML = ICONS.check;
-      }
-      if (pillEl) {
-        pillEl.innerHTML = `<span class="bui-pill-green">Completed</span>`;
-      }
-    } else if (status === 'failed') {
-      if (badgeEl) {
-        badgeEl.className = 'bui-badge-red';
-        badgeEl.innerHTML = ICONS.x;
-      }
-      if (pillEl) {
-        pillEl.innerHTML = `<span class="bui-pill-red">Failed ${ICONS.retry}</span>`;
-      }
+    if (step === 1) {
+      // Step 1: Connecting
+      if (row1) row1.className = 'bui-task-row is-active';
+      if (row2) row2.className = 'bui-task-row';
+      if (row3) row3.className = 'bui-task-row';
+
+      if (badge1) badge1.innerHTML = renderSpinnerRing(true, 1);
+      if (badge2) badge2.innerHTML = renderSpinnerRing(false, 2);
+      if (badge3) badge3.innerHTML = renderSpinnerRing(false, 3);
+
+      if (amount1) amount1.textContent = code;
+      if (amount2) amount2.textContent = '';
+      if (amount3) amount3.textContent = '';
+
+      if (pill1) pill1.innerHTML = '';
+      if (pill2) pill2.innerHTML = '';
+      if (pill3) pill3.innerHTML = '';
+    } else if (step === 2) {
+      // Step 2: Syncing history
+      if (row1) row1.className = 'bui-task-row';
+      if (row2) row2.className = 'bui-task-row is-active';
+      if (row3) row3.className = 'bui-task-row';
+
+      if (badge1) badge1.innerHTML = renderBadge('green', ICONS.check);
+      if (badge2) badge2.innerHTML = renderSpinnerRing(true, 2);
+      if (badge3) badge3.innerHTML = renderSpinnerRing(false, 3);
+
+      if (pill1) pill1.innerHTML = renderPill('green', 'Connected');
+      if (amount2) amount2.textContent = customLabel || 'Syncing...';
+      if (pill2) pill2.innerHTML = '';
+      if (pill3) pill3.innerHTML = '';
+    } else if (step === 3) {
+      // Step 3: Pairing devices
+      if (row1) row1.className = 'bui-task-row';
+      if (row2) row2.className = 'bui-task-row';
+      if (row3) row3.className = 'bui-task-row is-active';
+
+      if (badge1) badge1.innerHTML = renderBadge('green', ICONS.check);
+      if (badge2) badge2.innerHTML = renderBadge('green', ICONS.check);
+      if (badge3) badge3.innerHTML = renderSpinnerRing(true, 3);
+
+      if (pill1) pill1.innerHTML = renderPill('green', 'Connected');
+      if (pill2) pill2.innerHTML = renderPill('green', 'Completed');
+      if (amount3) amount3.textContent = 'Pairing...';
+      if (pill3) pill3.innerHTML = '';
+    } else if (step === 4) {
+      // All 3 Steps Completed
+      if (row1) row1.className = 'bui-task-row';
+      if (row2) row2.className = 'bui-task-row';
+      if (row3) row3.className = 'bui-task-row';
+
+      if (badge1) badge1.innerHTML = renderBadge('green', ICONS.check);
+      if (badge2) badge2.innerHTML = renderBadge('green', ICONS.check);
+      if (badge3) badge3.innerHTML = renderBadge('green', ICONS.check);
+
+      if (pill1) pill1.innerHTML = renderPill('green', 'Connected');
+      if (pill2) pill2.innerHTML = renderPill('green', 'Completed');
+      if (pill3) pill3.innerHTML = renderPill('green', 'Active');
+
+      if (amount3) amount3.textContent = 'Household Synced';
+    } else if (step === -1) {
+      // Error / Failed
+      if (badge3) badge3.innerHTML = renderBadge('red', ICONS.x);
+      if (pill3) pill3.innerHTML = renderPill('red', 'Failed', ICONS.retry);
     }
   }
 
   /**
-   * Apply custom sync key with Beautiful UI connecting animation sequence
+   * Apply custom sync key with Beautiful UI 3-step sequence over ~10 seconds
    */
   window.applyCustomSyncKey = function applyCustomSyncKey() {
     const input = document.getElementById('customSyncKeyInput');
@@ -87,84 +165,55 @@
       return;
     }
 
-    // 1. Enter Beautiful UI Connecting State
+    clearSyncTimers();
+
+    // 1. Initial State: Button shows connecting and Step 1 begins
     if (btn) {
       btn.disabled = true;
       btn.classList.remove('is-connected', 'is-error');
       btn.classList.add('is-connecting');
     }
-    if (btnText) btnText.textContent = 'Connecting...';
+    if (btnText) btnText.textContent = 'Connecting (1/3)...';
     if (btnIcon) btnIcon.classList.add('hidden');
     if (btnSuccess) btnSuccess.classList.add('hidden');
     if (btnSpinner) btnSpinner.classList.remove('hidden');
 
-    // Show Beautiful UI Task Row in running state
-    renderTaskRow('running', 'Syncing watch history with household...', val);
+    // Launch Step 1 (0s - 3.2s)
+    updateTaskRows(1, val);
 
-    // Guaranteed minimum animation time (850ms) for smooth visual recognition
-    const minAnimPromise = new Promise(resolve => setTimeout(resolve, 850));
-
-    // Perform actual sync operations
-    const syncPromise = (async () => {
-      try {
-        localStorage.setItem('tivra_sync_key', val);
-        if (typeof pushAllLocalHistory === 'function') {
-          await pushAllLocalHistory(val);
-        }
-        if (typeof fetchRemoteHistory === 'function') {
-          await fetchRemoteHistory(true);
-        }
-        return true;
-      } catch (err) {
-        return false;
+    // Save key to storage and push local items
+    let syncFailed = false;
+    try {
+      localStorage.setItem('tivra_sync_key', val);
+      if (typeof pushAllLocalHistory === 'function') {
+        pushAllLocalHistory(val).catch(() => {});
       }
-    })();
+    } catch (e) {
+      syncFailed = true;
+    }
 
-    Promise.all([syncPromise, minAnimPromise])
-      .then(([ok]) => {
-        if (!ok) throw new Error('Sync failed');
+    // Step 2 timer at 3.2s (3200ms)
+    activeSyncTimers.push(setTimeout(() => {
+      if (syncFailed) return;
+      if (btnText) btnText.textContent = 'Syncing (2/3)...';
+      updateTaskRows(2, val, 'Merging items');
 
-        // 2. Beautiful UI Success State (pop-in green badge, completed pill)
-        if (btnSpinner) btnSpinner.classList.add('hidden');
-        if (btnSuccess) btnSuccess.classList.remove('hidden');
-        if (btnText) btnText.textContent = 'Connected!';
-        if (btn) {
-          btn.classList.remove('is-connecting');
-          btn.classList.add('is-connected');
-        }
+      if (typeof fetchRemoteHistory === 'function') {
+        fetchRemoteHistory(true).catch(() => {});
+      }
+    }, 3200));
 
-        // Render Completed Beautiful UI Task Row
-        renderTaskRow('done', 'Household Synced', val);
+    // Step 3 timer at 6.8s (6800ms)
+    activeSyncTimers.push(setTimeout(() => {
+      if (syncFailed) return;
+      if (btnText) btnText.textContent = 'Pairing (3/3)...';
+      updateTaskRows(3, val);
+    }, 6800));
 
-        // Update modal status card immediately
-        if (typeof updateSyncStatusUI === 'function') {
-          updateSyncStatusUI(val, false);
-        }
-        if (typeof showToast === 'function') {
-          showToast(`Connected to Household: ${val}`);
-        }
-
-        // 3. Keep confirmation visible for 750ms so the user clearly sees it
-        setTimeout(() => {
-          if (typeof closeSyncModal === 'function') {
-            closeSyncModal();
-          }
-          // Reset button and task row after exit
-          setTimeout(() => {
-            if (btn) {
-              btn.disabled = false;
-              btn.classList.remove('is-connected', 'is-connecting', 'is-error');
-            }
-            if (btnText) btnText.textContent = 'Connect';
-            if (btnIcon) btnIcon.classList.remove('hidden');
-            if (btnSuccess) btnSuccess.classList.add('hidden');
-            if (btnSpinner) btnSpinner.classList.add('hidden');
-            renderTaskRow('idle');
-          }, 300);
-        }, 750);
-      })
-      .catch(() => {
-        // 4. Beautiful UI Failed State (pop-in red badge, retry pill)
+    // Completion timer at 9.6s (~10s total sequence)
+    activeSyncTimers.push(setTimeout(() => {
+      if (syncFailed) {
+        // Failed flow
         if (btnSpinner) btnSpinner.classList.add('hidden');
         if (btn) {
           btn.disabled = false;
@@ -173,27 +222,75 @@
         }
         if (btnText) btnText.textContent = 'Failed to Connect';
         if (btnIcon) btnIcon.classList.remove('hidden');
-
-        renderTaskRow('failed', 'Connection failed. Check network.', val);
+        updateTaskRows(-1, val);
         if (typeof showToast === 'function') {
           showToast('Could not connect. Check network and try again.');
         }
-
-        setTimeout(() => {
+        activeSyncTimers.push(setTimeout(() => {
           if (btn) btn.classList.remove('is-error');
           if (btnText) btnText.textContent = 'Connect';
-        }, 2500);
-      });
+        }, 2500));
+        return;
+      }
+
+      // Success flow
+      updateTaskRows(4, val);
+
+      if (btnSpinner) btnSpinner.classList.add('hidden');
+      if (btnSuccess) btnSuccess.classList.remove('hidden');
+      if (btnText) btnText.textContent = 'Connected!';
+      if (btn) {
+        btn.classList.remove('is-connecting');
+        btn.classList.add('is-connected');
+      }
+
+      // Update modal household active key display
+      if (typeof updateSyncStatusUI === 'function') {
+        updateSyncStatusUI(val, false);
+      }
+      if (typeof showToast === 'function') {
+        showToast(`Connected to Household: ${val}`);
+      }
+
+      // Close modal smoothly after user sees the 3-step completion
+      activeSyncTimers.push(setTimeout(() => {
+        if (typeof closeSyncModal === 'function') {
+          closeSyncModal();
+        }
+        // Reset button and task rows after closing
+        activeSyncTimers.push(setTimeout(() => {
+          if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('is-connected', 'is-connecting', 'is-error');
+          }
+          if (btnText) btnText.textContent = 'Connect';
+          if (btnIcon) btnIcon.classList.remove('hidden');
+          if (btnSuccess) btnSuccess.classList.add('hidden');
+          if (btnSpinner) btnSpinner.classList.add('hidden');
+          updateTaskRows(0);
+        }, 400));
+      }, 900));
+
+    }, 9600));
   };
 
   /**
    * Reset to auto-discovered Home Wi-Fi sync
    */
   window.resetToWifiSync = function resetToWifiSync() {
+    clearSyncTimers();
+    const input = document.getElementById('customSyncKeyInput');
+    if (input) input.value = '';
     if (typeof setSyncKey === 'function') {
       setSyncKey('');
     }
-    renderTaskRow('idle');
+    updateTaskRows(0);
+    if (typeof updateSyncStatusUI === 'function') {
+      updateSyncStatusUI('HOME', true);
+    }
+    if (typeof showToast === 'function') {
+      showToast('Reset to Home Wi-Fi Auto-Sync');
+    }
     if (typeof closeSyncModal === 'function') {
       closeSyncModal();
     }

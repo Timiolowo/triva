@@ -564,11 +564,7 @@ function updateSyncStatusUI(syncKey, isAutoDiscovery) {
     curKeyDisplay.textContent = syncKey || 'HOME';
   }
   if (resetBtn) {
-    if (isAutoDiscovery) {
-      resetBtn.classList.add('hidden');
-    } else {
-      resetBtn.classList.remove('hidden');
-    }
+    resetBtn.classList.remove('hidden');
   }
   if (input && !isAutoDiscovery && syncKey) {
     input.value = syncKey;
