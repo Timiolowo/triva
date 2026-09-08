@@ -64,7 +64,12 @@ function setupRemoteNavigation() {
       }
       if (state.currentView === 'player') {
         e.preventDefault();
-        exitPlayer();
+        if (typeof handlePlayerBack === 'function') {
+          handlePlayerBack();
+        } else {
+          exitPlayer();
+        }
+        return;
       } else if (state.currentView === 'tvShow') {
         e.preventDefault();
         showResultsOrHome();

@@ -1494,6 +1494,24 @@ function togglePlayerFullscreen() {
   }
 }
 
+if (typeof document !== 'undefined') {
+  ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange'].forEach(evt => {
+    document.addEventListener(evt, () => {
+      const fsBtn = document.getElementById('playerFullscreenBtn');
+      if (!fsBtn) return;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      fsBtn.title = isFs ? 'Exit Fullscreen' : 'Fullscreen';
+      fsBtn.setAttribute('aria-label', isFs ? 'Exit Fullscreen' : 'Toggle fullscreen');
+      const svg = fsBtn.querySelector('svg');
+      if (svg) {
+        svg.innerHTML = isFs
+          ? '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>'
+          : '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>';
+      }
+    });
+  });
+}
+
 function formatTime(seconds) {
   if (isNaN(seconds) || seconds < 0) return '0:00';
   const h = Math.floor(seconds / 3600);
@@ -1643,7 +1661,32 @@ function changeServer(newServer) {
   }
 }
 
+function handlePlayerBack() {
+  // 1. If in browser fullscreen, exit fullscreen first and stay on the player in windowed mode
+  if (document.fullscreenElement) {
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+    showPlayerControls();
+    showToast('Exited Fullscreen');
+    return;
+  }
+
+  // 2. If mobile virtual rotation is active, return to portrait first
+  if (state.isRotated && typeof toggleScreenRotation === 'function') {
+    toggleScreenRotation();
+    showPlayerControls();
+    return;
+  }
+
+  // 3. Otherwise exit the player back to previous screen
+  exitPlayer();
+}
+
 function exitPlayer() {
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
   const item = state.activeItem;
   stopPlayer();
 
@@ -1659,6 +1702,9 @@ function exitPlayer() {
 }
 
 function stopPlayer() {
+  if (document.fullscreenElement && document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  }
   clearTimeout(state.playerControlsTimer);
   state.playerControlsTimer = null;
   clearInterval(state.clockTimer);
@@ -1814,7 +1860,7 @@ function setupPlayerControlsAutoHide() {
       if (action === 'back') {
         event.preventDefault();
         event.stopImmediatePropagation();
-        exitPlayer();
+        handlePlayerBack();
         return;
       }
     } else {
@@ -1822,6 +1868,10 @@ function setupPlayerControlsAutoHide() {
       if (action === 'back') {
         event.preventDefault();
         event.stopImmediatePropagation();
+        if (document.fullscreenElement) {
+          handlePlayerBack();
+          return;
+        }
         hidePlayerControls();
         return;
       }
