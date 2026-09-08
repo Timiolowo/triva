@@ -405,16 +405,38 @@ function getSyncKey() {
   }
 }
 
+function pushAllLocalHistory(customKey) {
+  let localList = [];
+  try {
+    const raw = localStorage.getItem('litetv_history');
+    localList = raw ? JSON.parse(raw) : [];
+  } catch (e) {}
+  if (!localList.length) return Promise.resolve();
+
+  const key = customKey !== undefined ? customKey : getSyncKey();
+  const url = key ? `/api/sync?key=${encodeURIComponent(key)}` : '/api/sync';
+
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items: localList })
+  }).catch(() => {});
+}
+
 function setSyncKey(key) {
   try {
-    if (key && typeof key === 'string' && key.trim()) {
-      localStorage.setItem('tivra_sync_key', key.trim().toUpperCase());
-      showToast(`Connected to Sync Key: ${key.trim().toUpperCase()}`);
+    const cleanKey = (key && typeof key === 'string' && key.trim()) ? key.trim().toUpperCase() : '';
+    if (cleanKey) {
+      localStorage.setItem('tivra_sync_key', cleanKey);
+      showToast(`Connected to Sync Key: ${cleanKey}`);
+      pushAllLocalHistory(cleanKey).finally(() => {
+        fetchRemoteHistory(true);
+      });
     } else {
       localStorage.removeItem('tivra_sync_key');
       showToast('Switched to Home Wi-Fi auto-sync');
+      fetchRemoteHistory(true);
     }
-    fetchRemoteHistory(true);
   } catch (e) {}
 }
 
@@ -481,31 +503,31 @@ function fetchRemoteHistory(force = false) {
           if ((remoteItem.timestamp || 0) > (localItem.timestamp || 0)) {
             localList[matchIdx] = remoteItem;
             changed = true;
-          } else if ((localItem.timestamp || 0) > (remoteItem.timestamp || 0)) {
-            pushProgressToRemote(localItem);
           }
         }
       });
 
-      // Also check if any local items don't exist remotely and push them
+      // Check if any local items don't exist remotely or have newer timestamps
+      let needsPush = false;
       localList.forEach(localItem => {
         const isTv = localItem.type === 'tv';
-        const existsRemotely = remoteList.some(r =>
+        const remoteItem = remoteList.find(r =>
           String(r.id) === String(localItem.id) &&
           r.type === localItem.type &&
           (!isTv || (String(r.season) === String(localItem.season) && String(r.episode) === String(localItem.episode)))
         );
-        if (!existsRemotely) {
-          pushProgressToRemote(localItem);
+        if (!remoteItem || (localItem.timestamp || 0) > (remoteItem.timestamp || 0)) {
+          needsPush = true;
         }
       });
+      if (needsPush) {
+        pushAllLocalHistory();
+      }
 
       if (changed) {
         localList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         localStorage.setItem('litetv_history', JSON.stringify(localList.slice(0, MAX_WATCH_HISTORY)));
-        if (state.currentView === 'home') {
-          loadWatchHistory();
-        }
+        loadWatchHistory();
       }
     })
     .catch(() => {});

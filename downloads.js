@@ -5,7 +5,19 @@
 
   function isSmartTv() {
     var ua = navigator.userAgent || '';
-    if (/Hisense|VIDAA|Odin\/|SmartTV|SMART-TV|Tizen|Web0S|WebOS|NetCast|HbbTV|Android TV|GoogleTV|AppleTV|BRAVIA|AFT\w|CrKey|Roku|Vewd|Opera TV|Vestel|DTV|Insignia|TCL|MiTV|PhilipsTV|\bTV\b|LargeScreen/i.test(ua)) {
+    if (/Hisense|VIDAA|Odin\/|SmartTV|SMART-TV|Tizen|Web0S|WebOS|NetCast|HbbTV|Android TV|GoogleTV|AppleTV|BRAVIA|AFT\w|CrKey|Roku|Vewd|Opera TV|Vestel|DTV|Insignia|TCL|MiTV|PhilipsTV|\bTV\b|LargeScreen/i.test(ua)
+        || typeof window.hisense !== 'undefined'
+        || typeof window.webOS !== 'undefined'
+        || typeof window.tizen !== 'undefined') {
+      return true;
+    }
+    if (typeof window.detectClientDevice === 'function') {
+      try {
+        var dev = window.detectClientDevice();
+        if (dev && dev.type === 'tv') return true;
+      } catch (_) {}
+    }
+    if (/Linux/i.test(ua) && (/Odin|HbbTV|LargeScreen/i.test(ua) || (window.screen && window.screen.width >= 1280 && navigator.maxTouchPoints === 0))) {
       return true;
     }
     try {

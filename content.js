@@ -616,20 +616,21 @@ function detectClientDevice() {
   const maxTouch = navigator.maxTouchPoints || 0;
 
   // 1. Smart TV detection
-  const isTv = /VIDAA|Hisense|SmartTV|Tizen|webOS|NetCast|AppleTV|HbbTV|Roku|CrKey|FireTV|AFTT|AFTM|AFTA|Android.*TV/i.test(ua)
+  const isTv = /VIDAA|Hisense|Odin\/|SmartTV|SMART-TV|Tizen|webOS|Web0S|NetCast|AppleTV|HbbTV|Roku|CrKey|FireTV|AFTT|AFTM|AFTA|Android.*TV|GoogleTV|BRAVIA|Vewd|Opera TV|Vestel|DTV|Insignia|TCL|MiTV|PhilipsTV|\bTV\b|LargeScreen/i.test(ua)
     || typeof window.hisense !== 'undefined'
     || typeof window.webOS !== 'undefined'
-    || typeof window.tizen !== 'undefined';
+    || typeof window.tizen !== 'undefined'
+    || (window.matchMedia && (window.matchMedia('(tv)').matches || window.matchMedia('(display-mode: tv)').matches));
 
   if (isTv) {
     let tvName = 'Smart TV';
-    if (/VIDAA|Hisense/i.test(ua) || typeof window.hisense !== 'undefined') tvName = 'Smart TV (VIDAA)';
-    else if (/webOS|NetCast/i.test(ua) || typeof window.webOS !== 'undefined') tvName = 'LG Smart TV (webOS)';
+    if (/VIDAA|Hisense|Odin\//i.test(ua) || typeof window.hisense !== 'undefined') tvName = 'Smart TV (VIDAA)';
+    else if (/webOS|Web0S|NetCast/i.test(ua) || typeof window.webOS !== 'undefined') tvName = 'LG Smart TV (webOS)';
     else if (/Tizen/i.test(ua) || typeof window.tizen !== 'undefined') tvName = 'Samsung Smart TV (Tizen)';
     else if (/AppleTV/i.test(ua)) tvName = 'Apple TV';
-    else if (/AFT/i.test(ua)) tvName = 'Fire TV';
+    else if (/AFT|FireTV/i.test(ua)) tvName = 'Fire TV';
     else if (/Roku/i.test(ua)) tvName = 'Roku TV';
-    else if (/Android/i.test(ua)) tvName = 'Android TV';
+    else if (/Android|GoogleTV/i.test(ua)) tvName = 'Android TV';
     return { type: 'tv', label: tvName, icon: 'tv' };
   }
 
@@ -661,8 +662,11 @@ function detectClientDevice() {
     return { type: 'windows', label: 'Windows PC', icon: 'laptop' };
   }
 
-  // 6. Linux PC
+  // 6. Linux PC (Guard against VIDAA / Odin Linux TVs)
   if (/Linux/i.test(ua) || (platform && platform.startsWith('Linux'))) {
+    if (/Odin|HbbTV|SmartTV|LargeScreen|TV/i.test(ua) || (window.screen && window.screen.width >= 1280 && maxTouch === 0 && !('ontouchstart' in window))) {
+      return { type: 'tv', label: 'Smart TV (VIDAA)', icon: 'tv' };
+    }
     return { type: 'linux', label: 'Linux PC', icon: 'laptop' };
   }
 

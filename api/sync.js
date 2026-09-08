@@ -9,14 +9,15 @@ const MAX_HISTORY_PER_ROOM = 30;
 // In-memory cache for fast response times
 let syncCache = null;
 
+const TMP_SYNC_FILE = path.join('/tmp', 'tivra_sync.json');
+
 function ensureStorage() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
   if (!syncCache) {
     try {
       if (fs.existsSync(SYNC_FILE)) {
         syncCache = JSON.parse(fs.readFileSync(SYNC_FILE, 'utf8'));
+      } else if (fs.existsSync(TMP_SYNC_FILE)) {
+        syncCache = JSON.parse(fs.readFileSync(TMP_SYNC_FILE, 'utf8'));
       } else {
         syncCache = {};
       }
@@ -29,9 +30,14 @@ function ensureStorage() {
 function persistStorage() {
   try {
     ensureStorage();
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
     fs.writeFileSync(SYNC_FILE, JSON.stringify(syncCache, null, 2), 'utf8');
   } catch (e) {
-    console.error('[API/SYNC ERROR] Failed to persist sync file:', e.message);
+    try {
+      fs.writeFileSync(TMP_SYNC_FILE, JSON.stringify(syncCache, null, 2), 'utf8');
+    } catch (_) {}
   }
 }
 
@@ -149,14 +155,23 @@ module.exports = async function handler(req, res) {
     req.on('end', () => {
       try {
         const payload = JSON.parse(body || '{}');
-        const item = payload.item;
+        const items = Array.isArray(payload.items)
+          ? payload.items
+          : (Array.isArray(payload.history)
+            ? payload.history
+            : (payload.item ? [payload.item] : []));
 
-        if (!item || !item.id || !item.type) {
+        if (!items.length) {
           return res.status(400).json({ success: false, error: 'Invalid item payload' });
         }
 
-        const currentList = syncCache[roomKey] || [];
-        syncCache[roomKey] = mergeHistory(currentList, item);
+        let currentList = syncCache[roomKey] || [];
+        items.forEach(item => {
+          if (item && item.id && item.type) {
+            currentList = mergeHistory(currentList, item);
+          }
+        });
+        syncCache[roomKey] = currentList;
         persistStorage();
 
         return res.json({
