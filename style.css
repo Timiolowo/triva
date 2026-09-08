@@ -3015,35 +3015,40 @@ video::cue {
 
 /* Household Sync Modal */
 .sync-modal-card {
-  width: min(520px, 92vw);
+  width: min(680px, 92vw);
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: none;
   border-radius: 24px;
-  background: rgba(17, 17, 15, 0.96);
-  backdrop-filter: blur(28px) saturate(140%);
-  -webkit-backdrop-filter: blur(28px) saturate(140%);
-  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  padding: 28px;
+  background: #141412;
+  box-shadow: none;
+  padding: 32px 34px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   color: #dedbd3;
   animation: modal-fade-in 0.22s ease-out;
+}
+
+@media (min-width: 768px) {
+  .sync-modal-card {
+    width: min(740px, 90vw);
+    padding: 38px 44px;
+  }
 }
 
 .sync-modal-header {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .sync-modal-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 14px;
   background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.25);
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3052,12 +3057,12 @@ video::cue {
 }
 
 .sync-modal-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 
 .sync-modal-title {
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 700;
   color: #f3f4f6;
   margin: 0 0 3px 0;
@@ -3065,7 +3070,7 @@ video::cue {
 }
 
 .sync-modal-subtitle {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #9ca3af;
   margin: 0;
 }
@@ -3073,17 +3078,18 @@ video::cue {
 .sync-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
 .sync-status-box {
-  padding: 16px;
+  padding: 18px 20px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.035);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .sync-status-row {
@@ -3094,36 +3100,36 @@ video::cue {
 }
 
 .sync-status-label {
-  font-size: 12.5px;
+  font-size: 13px;
   color: #9ca3af;
   font-weight: 500;
 }
 
 .sync-status-value {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #34d399;
   font-weight: 600;
 }
 
 .sync-code-badge {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 8px;
-  background: rgba(56, 189, 248, 0.12);
+  background: rgba(56, 189, 248, 0.14);
   color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.28);
+  border: none;
 }
 
 .sync-hint-text {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #a1a1aa;
-  line-height: 1.45;
-  margin: 4px 0 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 10px;
+  line-height: 1.5;
+  margin: 2px 0 0 0;
+  border-top: none;
+  padding-top: 4px;
 }
 
 .sync-hint-text strong {
