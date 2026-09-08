@@ -466,13 +466,13 @@ function scheduleSyncPush(item) {
 
 function fetchRemoteHistory(force = false) {
   const now = Date.now();
-  if (!force && now - lastRemoteFetchTime < 10000) return;
+  if (!force && now - lastRemoteFetchTime < 10000) return Promise.resolve();
   lastRemoteFetchTime = now;
 
   const customKey = getSyncKey();
   const url = customKey ? `/api/sync?key=${encodeURIComponent(customKey)}` : '/api/sync';
 
-  fetch(url)
+  return fetch(url)
     .then(res => res.json())
     .then(data => {
       if (!data || !data.success || !Array.isArray(data.history)) return;
@@ -548,41 +548,49 @@ function updateSyncStatusUI(syncKey, isAutoDiscovery) {
     }
     pill.setAttribute('title', isAutoDiscovery 
       ? `Auto-synced with devices on your Wi-Fi network (${syncKey}). Click to view or set a custom key.`
-      : `Synced to room key: ${syncKey}. Click to change.`);
+      : `Connected to Household Key (${syncKey}). Click to manage.`);
   });
+
+  const curStatus = document.getElementById('syncCurrentStatus');
+  const curKeyDisplay = document.getElementById('syncCurrentKeyDisplay');
+  const resetBtn = document.getElementById('resetWifiSyncBtn');
+  const input = document.getElementById('customSyncKeyInput');
+
+  if (curStatus) {
+    curStatus.textContent = isAutoDiscovery ? 'Home Wi-Fi Auto-Sync' : 'Custom Household Key';
+    curStatus.style.color = isAutoDiscovery ? '#34d399' : '#38bdf8';
+  }
+  if (curKeyDisplay) {
+    curKeyDisplay.textContent = syncKey || 'HOME';
+  }
+  if (resetBtn) {
+    if (isAutoDiscovery) {
+      resetBtn.classList.add('hidden');
+    } else {
+      resetBtn.classList.remove('hidden');
+    }
+  }
+  if (input && !isAutoDiscovery && syncKey) {
+    input.value = syncKey;
+  }
 }
 
 function openSyncModal() {
   const modal = document.getElementById('syncModal');
   if (!modal) return;
-
-  const customKey = getSyncKey();
-  const input = document.getElementById('customSyncKeyInput');
-  const statusEl = document.getElementById('syncCurrentStatus');
-  const keyDisplayEl = document.getElementById('syncCurrentKeyDisplay');
-  const resetBtn = document.getElementById('resetWifiSyncBtn');
-
-  if (input) input.value = customKey || '';
-  if (keyDisplayEl) keyDisplayEl.textContent = state.activeSyncKey || (customKey || 'CONNECTING...');
-  if (statusEl) {
-    statusEl.textContent = customKey ? 'Custom Household Key' : 'Home Wi-Fi Auto-Sync';
-  }
-  if (resetBtn) {
-    if (customKey) {
-      resetBtn.classList.remove('hidden');
-    } else {
-      resetBtn.classList.add('hidden');
-    }
-  }
-
   modal.classList.remove('hidden');
   document.body.classList.add('modal-open');
 
+  const customKey = getSyncKey();
+  const isAuto = !customKey;
+  updateSyncStatusUI(customKey || state.activeSyncKey || 'HOME', isAuto);
+
+  const input = document.getElementById('customSyncKeyInput');
   if (input) {
+    input.value = customKey || '';
     setTimeout(() => {
-      input.focus();
-      input.select();
-    }, 60);
+      try { input.focus(); } catch (e) {}
+    }, 80);
   }
 }
 
@@ -594,6 +602,11 @@ function closeSyncModal() {
 
 function applyCustomSyncKey() {
   const input = document.getElementById('customSyncKeyInput');
+  const btn = document.getElementById('syncConnectBtn');
+  const btnText = document.getElementById('syncConnectBtnText');
+  const btnIcon = document.getElementById('syncConnectBtnIcon');
+  const btnSpinner = document.getElementById('syncConnectBtnSpinner');
+
   if (!input) return;
   const val = (input.value || '').trim().toUpperCase();
   if (!val) {
@@ -601,8 +614,47 @@ function applyCustomSyncKey() {
     input.focus();
     return;
   }
-  setSyncKey(val);
-  closeSyncModal();
+
+  // Visual connecting animation (GPU-composited, 0 TV memory overhead)
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('is-connecting');
+  }
+  if (btnText) btnText.textContent = 'Connecting...';
+  if (btnIcon) btnIcon.classList.add('hidden');
+  if (btnSpinner) btnSpinner.classList.remove('hidden');
+
+  const cleanupBtn = (newText = 'Connect') => {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('is-connecting');
+    }
+    if (btnText) btnText.textContent = newText;
+    if (btnIcon) btnIcon.classList.remove('hidden');
+    if (btnSpinner) btnSpinner.classList.add('hidden');
+  };
+
+  try {
+    localStorage.setItem('tivra_sync_key', val);
+    pushAllLocalHistory(val)
+      .then(() => fetchRemoteHistory(true))
+      .then(() => {
+        if (btnText) btnText.textContent = 'Connected!';
+        showToast(`Connected to Household: ${val}`);
+        setTimeout(() => {
+          closeSyncModal();
+          cleanupBtn('Connect');
+        }, 450);
+      })
+      .catch(() => {
+        showToast(`Connected to Household: ${val}`);
+        closeSyncModal();
+        cleanupBtn('Connect');
+      });
+  } catch (e) {
+    showToast('Failed to save key');
+    cleanupBtn('Connect');
+  }
 }
 
 function resetToWifiSync() {

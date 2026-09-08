@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=67">
+  <link rel="stylesheet" href="/style.css?v=68">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 
@@ -736,7 +736,17 @@
             <p class="sync-input-hint">Enter your personal household code (e.g. HOME-XXX)</p>
             <div class="sync-input-group">
               <input type="text" id="customSyncKeyInput" class="sync-input" placeholder="e.g. HOME-XXX" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="characters" tabindex="0">
-              <button type="button" class="tv-btn tv-btn-primary" onclick="applyCustomSyncKey()" tabindex="0">Connect Key</button>
+              <button type="button" id="syncConnectBtn" class="tv-btn tv-btn-primary sync-connect-btn" onclick="applyCustomSyncKey()" tabindex="0" title="Connect Key">
+                <span id="syncConnectBtnText">Connect</span>
+                <svg id="syncConnectBtnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                <svg id="syncConnectBtnSpinner" class="sync-btn-spinner hidden" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-opacity="0.28" stroke-width="2.6"></circle>
+                  <path d="M12 3a9 9 0 0 1 9 9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"></path>
+                </svg>
+              </button>
             </div>
             <div class="sync-actions-row">
               <button type="button" id="resetWifiSyncBtn" class="tv-btn tv-btn-secondary tv-btn-sm hidden" onclick="resetToWifiSync()" tabindex="0">Reset to Home Wi-Fi Sync</button>
@@ -747,7 +757,7 @@
     </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/state.js?v=4"></script>
+  <script src="/state.js?v=5"></script>
   <script src="/content.js?v=11"></script>
   <script src="/player.js?v=5"></script>
   <script src="/navigation.js?v=3"></script>
