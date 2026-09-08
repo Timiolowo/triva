@@ -33,11 +33,18 @@ function setupRemoteNavigation() {
     const action = getRemoteAction(e);
     const searchForm = document.getElementById('searchForm');
     const mediaInfoOverlay = document.getElementById('mediaInfoOverlay');
+    const syncModal = document.getElementById('syncModal');
     if (action === 'back' && e.target.tagName === 'INPUT' && (e.key === 'Backspace' || e.keyCode === 8)) return;
 
     if (action === 'back' && mediaInfoOverlay && !mediaInfoOverlay.classList.contains('hidden')) {
       e.preventDefault();
       closeMediaInfo();
+      return;
+    }
+
+    if (action === 'back' && syncModal && !syncModal.classList.contains('hidden')) {
+      e.preventDefault();
+      closeSyncModal();
       return;
     }
 

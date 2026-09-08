@@ -1,0 +1,60 @@
+{
+  "home_eff8e7ca50": [
+    {
+      "id": 7225,
+      "type": "tv",
+      "title": "Merlin",
+      "year": "2008",
+      "season": 1,
+      "episode": 1,
+      "episodeName": "The Dragon's Call",
+      "image": "https://image.tmdb.org/t/p/w500/8eR5Jg7CxsuCOEBU5wW0opObxpi.jpg",
+      "heroImage": "https://image.tmdb.org/t/p/w1280/rB0nSLQZbyNgWxgTQQbKrFsEw6h.jpg",
+      "currentTime": 46.333842,
+      "duration": 2753.917550000009,
+      "progressPct": 2,
+      "timestamp": 1788860199883
+    },
+    {
+      "id": 1108427,
+      "type": "movie",
+      "title": "Moana",
+      "year": "2026",
+      "image": "https://image.tmdb.org/t/p/w500/zKVgiv5qHCvCLT4A2ymJi5QeXDH.jpg",
+      "heroImage": "https://image.tmdb.org/t/p/w1280/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+      "currentTime": 615.010517,
+      "duration": 6327.377019999935,
+      "progressPct": 10,
+      "timestamp": 1788826617313
+    }
+  ],
+  "home_local_wifi": [
+    {
+      "id": 7225,
+      "type": "tv",
+      "title": "Merlin",
+      "year": "2008",
+      "season": 1,
+      "episode": 1,
+      "episodeName": "The Dragon's Call",
+      "image": "https://image.tmdb.org/t/p/w500/8eR5Jg7CxsuCOEBU5wW0opObxpi.jpg",
+      "heroImage": "https://image.tmdb.org/t/p/w1280/rB0nSLQZbyNgWxgTQQbKrFsEw6h.jpg",
+      "currentTime": 46.333842,
+      "duration": 2753.917550000009,
+      "progressPct": 2,
+      "timestamp": 1788860199883
+    },
+    {
+      "id": 1108427,
+      "type": "movie",
+      "title": "Moana",
+      "year": "2026",
+      "image": "https://image.tmdb.org/t/p/w500/zKVgiv5qHCvCLT4A2ymJi5QeXDH.jpg",
+      "heroImage": "https://image.tmdb.org/t/p/w1280/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+      "currentTime": 615.010517,
+      "duration": 6327.377019999935,
+      "progressPct": 10,
+      "timestamp": 1788826617313
+    }
+  ]
+}

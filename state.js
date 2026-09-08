@@ -356,7 +356,7 @@ function saveToWatchHistory(item, currentTime = null, duration = null) {
     // Deduplicate
     list = list.filter(i => !(i.id === item.id && i.type === item.type && (item.type !== 'tv' || (String(i.season) === String(item.season) && String(i.episode) === String(item.episode)))));
     
-    list.unshift({
+    const savedItem = {
       id: item.id,
       type: item.type,
       title: item.title,
@@ -370,12 +370,17 @@ function saveToWatchHistory(item, currentTime = null, duration = null) {
       duration: finalDur,
       progressPct: progressPct,
       timestamp: Date.now()
-    });
+    };
+
+    list.unshift(savedItem);
 
     localStorage.setItem('litetv_history', JSON.stringify(list.slice(0, MAX_WATCH_HISTORY)));
     if (state.currentView === 'home') {
       loadWatchHistory();
     }
+
+    // Push progress update to remote sync engine
+    scheduleSyncPush(savedItem);
   } catch (e) {}
 }
 
@@ -383,4 +388,239 @@ function clearWatchHistory() {
   localStorage.removeItem('litetv_history');
   loadWatchHistory();
   showToast('Watch history cleared');
+}
+
+// ==========================================
+// Cross-Device Household Sync Engine
+// ==========================================
+let syncDebounceTimer = null;
+let lastSyncPushTime = 0;
+let lastRemoteFetchTime = 0;
+
+function getSyncKey() {
+  try {
+    return localStorage.getItem('tivra_sync_key') || '';
+  } catch (e) {
+    return '';
+  }
+}
+
+function setSyncKey(key) {
+  try {
+    if (key && typeof key === 'string' && key.trim()) {
+      localStorage.setItem('tivra_sync_key', key.trim().toUpperCase());
+      showToast(`Connected to Sync Key: ${key.trim().toUpperCase()}`);
+    } else {
+      localStorage.removeItem('tivra_sync_key');
+      showToast('Switched to Home Wi-Fi auto-sync');
+    }
+    fetchRemoteHistory(true);
+  } catch (e) {}
+}
+
+function pushProgressToRemote(item) {
+  if (!item || !item.id) return;
+  const customKey = getSyncKey();
+  const url = customKey ? `/api/sync?key=${encodeURIComponent(customKey)}` : '/api/sync';
+  
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item })
+  }).catch(() => {});
+}
+
+function scheduleSyncPush(item) {
+  clearTimeout(syncDebounceTimer);
+  const now = Date.now();
+  const delay = now - lastSyncPushTime < 3000 ? 1500 : 400;
+  syncDebounceTimer = setTimeout(() => {
+    lastSyncPushTime = Date.now();
+    pushProgressToRemote(item);
+  }, delay);
+}
+
+function fetchRemoteHistory(force = false) {
+  const now = Date.now();
+  if (!force && now - lastRemoteFetchTime < 10000) return;
+  lastRemoteFetchTime = now;
+
+  const customKey = getSyncKey();
+  const url = customKey ? `/api/sync?key=${encodeURIComponent(customKey)}` : '/api/sync';
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (!data || !data.success || !Array.isArray(data.history)) return;
+
+      updateSyncStatusUI(data.syncKey, data.isAutoDiscovery);
+
+      const remoteList = data.history;
+      let localList = [];
+      try {
+        const raw = localStorage.getItem('litetv_history');
+        localList = raw ? JSON.parse(raw) : [];
+      } catch (e) {}
+
+      let changed = false;
+
+      // Merge remote into local
+      remoteList.forEach(remoteItem => {
+        const isTv = remoteItem.type === 'tv';
+        const matchIdx = localList.findIndex(l =>
+          String(l.id) === String(remoteItem.id) &&
+          l.type === remoteItem.type &&
+          (!isTv || (String(l.season) === String(remoteItem.season) && String(l.episode) === String(remoteItem.episode)))
+        );
+
+        if (matchIdx === -1) {
+          localList.push(remoteItem);
+          changed = true;
+        } else {
+          const localItem = localList[matchIdx];
+          if ((remoteItem.timestamp || 0) > (localItem.timestamp || 0)) {
+            localList[matchIdx] = remoteItem;
+            changed = true;
+          } else if ((localItem.timestamp || 0) > (remoteItem.timestamp || 0)) {
+            pushProgressToRemote(localItem);
+          }
+        }
+      });
+
+      // Also check if any local items don't exist remotely and push them
+      localList.forEach(localItem => {
+        const isTv = localItem.type === 'tv';
+        const existsRemotely = remoteList.some(r =>
+          String(r.id) === String(localItem.id) &&
+          r.type === localItem.type &&
+          (!isTv || (String(r.season) === String(localItem.season) && String(r.episode) === String(localItem.episode)))
+        );
+        if (!existsRemotely) {
+          pushProgressToRemote(localItem);
+        }
+      });
+
+      if (changed) {
+        localList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        localStorage.setItem('litetv_history', JSON.stringify(localList.slice(0, MAX_WATCH_HISTORY)));
+        if (state.currentView === 'home') {
+          loadWatchHistory();
+        }
+      }
+    })
+    .catch(() => {});
+}
+
+function updateSyncStatusUI(syncKey, isAutoDiscovery) {
+  state.activeSyncKey = syncKey || 'HOME';
+  state.isAutoDiscovery = !!isAutoDiscovery;
+
+  const pills = document.querySelectorAll('.footer-sync-pill');
+  pills.forEach(pill => {
+    pill.classList.remove('hidden');
+    const label = pill.querySelector('.sync-label');
+    if (label) {
+      label.textContent = isAutoDiscovery ? `Wi-Fi Synced` : `Key: ${syncKey}`;
+    }
+    pill.setAttribute('title', isAutoDiscovery 
+      ? `Auto-synced with devices on your Wi-Fi network (${syncKey}). Click to view or set a custom key.`
+      : `Synced to room key: ${syncKey}. Click to change.`);
+  });
+}
+
+function openSyncModal() {
+  const modal = document.getElementById('syncModal');
+  if (!modal) return;
+
+  const customKey = getSyncKey();
+  const input = document.getElementById('customSyncKeyInput');
+  const statusEl = document.getElementById('syncCurrentStatus');
+  const keyDisplayEl = document.getElementById('syncCurrentKeyDisplay');
+  const resetBtn = document.getElementById('resetWifiSyncBtn');
+
+  if (input) input.value = customKey || '';
+  if (keyDisplayEl) keyDisplayEl.textContent = state.activeSyncKey || (customKey || 'CONNECTING...');
+  if (statusEl) {
+    statusEl.textContent = customKey ? 'Custom Household Key' : 'Home Wi-Fi Auto-Sync';
+  }
+  if (resetBtn) {
+    if (customKey) {
+      resetBtn.classList.remove('hidden');
+    } else {
+      resetBtn.classList.add('hidden');
+    }
+  }
+
+  modal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+
+  if (input) {
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 60);
+  }
+}
+
+function closeSyncModal() {
+  const modal = document.getElementById('syncModal');
+  if (modal) modal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+function applyCustomSyncKey() {
+  const input = document.getElementById('customSyncKeyInput');
+  if (!input) return;
+  const val = (input.value || '').trim().toUpperCase();
+  if (!val) {
+    showToast('Please enter a Sync Key');
+    input.focus();
+    return;
+  }
+  setSyncKey(val);
+  closeSyncModal();
+}
+
+function resetToWifiSync() {
+  setSyncKey('');
+  closeSyncModal();
+}
+
+// Auto-sync lifecycle triggers
+if (typeof window !== 'undefined') {
+  const initSyncEvents = () => {
+    fetchRemoteHistory(true);
+    const input = document.getElementById('customSyncKeyInput');
+    if (input) {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          applyCustomSyncKey();
+        }
+      });
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSyncEvents);
+  } else {
+    initSyncEvents();
+  }
+
+  window.addEventListener('focus', () => {
+    if (state.currentView === 'home') fetchRemoteHistory();
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && state.currentView === 'home') {
+      fetchRemoteHistory();
+    }
+  });
+
+  // Background poll every 45s when on home screen
+  setInterval(() => {
+    if (state.currentView === 'home' && document.visibilityState === 'visible') {
+      fetchRemoteHistory();
+    }
+  }, 45000);
 }

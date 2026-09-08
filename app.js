@@ -96,6 +96,7 @@ function switchView(viewName) {
 
   if (viewName === 'home') {
     loadWatchHistory();
+    if (typeof fetchRemoteHistory === 'function') fetchRemoteHistory(true);
   }
 
   setTimeout(() => {

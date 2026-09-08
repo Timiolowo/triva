@@ -43,34 +43,19 @@ const server = http.createServer(async (req, res) => {
     return this;
   };
 
-  // API Routes (dynamically loaded so changes take effect without server restart)
-  if (pathname === '/api/search' || pathname === '/api/search.js') {
-    delete require.cache[require.resolve('./api/search.js')];
-    return require('./api/search.js')(req, res);
-  }
-  if (pathname === '/api/tv' || pathname === '/api/tv.js') {
-    delete require.cache[require.resolve('./api/tv.js')];
-    return require('./api/tv.js')(req, res);
-  }
-  if (pathname === '/api/trending' || pathname === '/api/trending.js') {
-    delete require.cache[require.resolve('./api/trending.js')];
-    return require('./api/trending.js')(req, res);
-  }
-  if (pathname === '/api/source' || pathname === '/api/source.js') {
-    delete require.cache[require.resolve('./api/source.js')];
-    return require('./api/source.js')(req, res);
-  }
-  if (pathname === '/api/proxy' || pathname === '/api/proxy.js') {
-    delete require.cache[require.resolve('./api/proxy.js')];
-    return require('./api/proxy.js')(req, res);
-  }
-  if (pathname === '/api/subtitles' || pathname === '/api/subtitles.js') {
-    delete require.cache[require.resolve('./api/subtitles.js')];
-    return require('./api/subtitles.js')(req, res);
-  }
-  if (pathname === '/api/download' || pathname === '/api/download.js') {
-    delete require.cache[require.resolve('./api/download.js')];
-    return require('./api/download.js')(req, res);
+  // Dynamic API Router (loads any api/*.js dynamically without server restart)
+  if (pathname.startsWith('/api/')) {
+    const routeName = pathname.replace(/^\/api\//, '').replace(/\.js$/, '');
+    const apiFilePath = path.join(__dirname, 'api', `${routeName}.js`);
+    if (fs.existsSync(apiFilePath)) {
+      try {
+        delete require.cache[require.resolve(apiFilePath)];
+        return require(apiFilePath)(req, res);
+      } catch (apiErr) {
+        console.error(`[API ERROR] ${pathname}:`, apiErr);
+        return res.status(500).json({ success: false, error: apiErr.message });
+      }
+    }
   }
   // Static File Serving
   let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);

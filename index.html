@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=64">
+  <link rel="stylesheet" href="/style.css?v=65">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 
@@ -118,10 +118,17 @@
               <span class="footer-separator">•</span>
               <span class="footer-sub">Ad-Free Player</span>
             </div>
-            <div class="footer-device-pill" title="Active device optimization">
-              <span class="device-dot"></span>
-              <span class="device-icon"></span>
-              <span class="device-label">Detecting…</span>
+            <div class="footer-status-group">
+              <button type="button" class="footer-sync-pill hidden" onclick="openSyncModal()" title="Household Sync" tabindex="0">
+                <span class="sync-dot"></span>
+                <span class="sync-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>
+                <span class="sync-label">Wi-Fi Synced</span>
+              </button>
+              <div class="footer-device-pill" title="Active device optimization">
+                <span class="device-dot"></span>
+                <span class="device-icon"></span>
+                <span class="device-label">Detecting…</span>
+              </div>
             </div>
           </div>
         </footer>
@@ -146,10 +153,17 @@
               <span class="footer-separator">•</span>
               <span class="footer-sub">Ad-Free Player</span>
             </div>
-            <div class="footer-device-pill" title="Active device optimization">
-              <span class="device-dot"></span>
-              <span class="device-icon"></span>
-              <span class="device-label">Detecting…</span>
+            <div class="footer-status-group">
+              <button type="button" class="footer-sync-pill hidden" onclick="openSyncModal()" title="Household Sync" tabindex="0">
+                <span class="sync-dot"></span>
+                <span class="sync-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>
+                <span class="sync-label">Wi-Fi Synced</span>
+              </button>
+              <div class="footer-device-pill" title="Active device optimization">
+                <span class="device-dot"></span>
+                <span class="device-icon"></span>
+                <span class="device-label">Detecting…</span>
+              </div>
             </div>
           </div>
         </footer>
@@ -186,10 +200,17 @@
               <span class="footer-separator">•</span>
               <span class="footer-sub">Ad-Free Player</span>
             </div>
-            <div class="footer-device-pill" title="Active device optimization">
-              <span class="device-dot"></span>
-              <span class="device-icon"></span>
-              <span class="device-label">Detecting…</span>
+            <div class="footer-status-group">
+              <button type="button" class="footer-sync-pill hidden" onclick="openSyncModal()" title="Household Sync" tabindex="0">
+                <span class="sync-dot"></span>
+                <span class="sync-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg></span>
+                <span class="sync-label">Wi-Fi Synced</span>
+              </button>
+              <div class="footer-device-pill" title="Active device optimization">
+                <span class="device-dot"></span>
+                <span class="device-icon"></span>
+                <span class="device-label">Detecting…</span>
+              </div>
             </div>
           </div>
         </footer>
@@ -678,15 +699,61 @@
         </div>
       </div>
     </div>
+    <div id="syncModal" class="media-info-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="syncModalTitle">
+      <div class="sync-modal-card">
+        <button type="button" id="syncModalClose" class="media-info-close" onclick="closeSyncModal()" aria-label="Close sync settings">×</button>
+        <div class="sync-modal-header">
+          <div class="sync-modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="syncModalTitle" class="sync-modal-title">Household Cross-Device Sync</h2>
+            <p class="sync-modal-subtitle">Pick up right where you left off on your Smart TV, laptop, or phone.</p>
+          </div>
+        </div>
+
+        <div class="sync-modal-body">
+          <div class="sync-status-box">
+            <div class="sync-status-row">
+              <span class="sync-status-label">Network Mode</span>
+              <span id="syncCurrentStatus" class="sync-status-value">Home Wi-Fi Auto-Sync</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Active Sync Key</span>
+              <span id="syncCurrentKeyDisplay" class="sync-code-badge">HOME</span>
+            </div>
+            <p class="sync-hint-text">
+              ✨ <strong>Zero-login automatic sync:</strong> Devices on the same home Wi-Fi automatically sync your watch history. Your Smart TV permanently remembers this session.
+            </p>
+          </div>
+
+          <div class="sync-key-section">
+            <label for="customSyncKeyInput" class="sync-input-label">Connect Across Mobile / Other Networks</label>
+            <p class="sync-input-hint">Enter your personal household code (e.g. TIMI-92) to sync even when not on home Wi-Fi:</p>
+            <div class="sync-input-group">
+              <input type="text" id="customSyncKeyInput" class="sync-input" placeholder="e.g. TIMI-92" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="characters" tabindex="0">
+              <button type="button" class="tv-btn tv-btn-primary" onclick="applyCustomSyncKey()" tabindex="0">Connect Key</button>
+            </div>
+            <div class="sync-actions-row">
+              <button type="button" id="resetWifiSyncBtn" class="tv-btn tv-btn-secondary tv-btn-sm hidden" onclick="resetToWifiSync()" tabindex="0">Reset to Home Wi-Fi Sync</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
-  <script src="/state.js?v=1"></script>
+  <script src="/state.js?v=2"></script>
   <script src="/content.js?v=10"></script>
   <script src="/player.js?v=4"></script>
-  <script src="/navigation.js?v=1"></script>
+  <script src="/navigation.js?v=2"></script>
   <script src="/app.js?v=43"></script>
   <script src="/downloads.js?v=5"></script>
-  <script src="/remote.js?v=1"></script>
+  <script src="/remote.js?v=2"></script>
 </body>
 
 </html>

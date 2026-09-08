@@ -133,7 +133,9 @@
       var searchForm = document.getElementById('searchForm');
       var isSearchOpen = searchForm && !searchForm.classList.contains('hidden');
       var mediaOverlay = document.getElementById('mediaInfoOverlay');
-      var isModalOpen = mediaOverlay && !mediaOverlay.classList.contains('hidden');
+      var syncModal = document.getElementById('syncModal');
+      var isModalOpen = (mediaOverlay && !mediaOverlay.classList.contains('hidden')) ||
+                        (syncModal && !syncModal.classList.contains('hidden'));
 
       // Only protect if at top-level home screen with no overlays open
       if (isHomeActive && !isSearchOpen && !isModalOpen) {
