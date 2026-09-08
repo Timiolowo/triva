@@ -67,12 +67,7 @@ function focusSearch() {
     if (searchInput) setTimeout(() => searchInput.focus(), 80);
   };
 
-  if (state.currentView !== 'home') {
-    if (typeof showHomeView === 'function') showHomeView();
-    setTimeout(openSearch, 80);
-  } else {
-    openSearch();
-  }
+  openSearch();
 }
 
 function closeHeaderSearch() {
@@ -308,13 +303,35 @@ function showMediaInfo(item) {
 
   const isEpisode = item.type === 'tv' && item.season && item.episode;
   const kicker = document.getElementById('mediaInfoKicker');
-  if (kicker) kicker.textContent = isEpisode ? `${item.title} · Episode` : 'Trending today';
+  if (kicker) {
+    if (isEpisode) {
+      const seriesTitle = item.seriesTitle || (state.activeItem && state.activeItem.title) || item.title || 'Series';
+      kicker.textContent = `${seriesTitle} · Season ${item.season}`;
+    } else if (item.type === 'tv') {
+      kicker.textContent = item.status ? item.status.toUpperCase() : 'TV SERIES';
+    } else {
+      kicker.textContent = 'Movie';
+    }
+  }
   document.getElementById('mediaInfoTitle').textContent = item.displayTitle || item.title;
-  document.getElementById('mediaInfoMeta').textContent = [
-    item.rating ? `★ ${item.rating}` : 'Not rated',
-    item.year || 'N/A',
-    isEpisode ? `S${item.season} · E${item.episode}` : item.type === 'tv' ? 'TV Series' : 'Movie'
-  ].join(' · ');
+
+  const metaContainer = document.getElementById('mediaInfoMeta');
+  if (metaContainer) {
+    const metaItems = [];
+    if (item.rating) {
+      metaItems.push(`<span class="rating">★ ${escapeHtml(item.rating)}</span>`);
+    }
+    const yearVal = item.year && item.year !== 'N/A' ? item.year : '';
+    if (yearVal) {
+      metaItems.push(`<span>${escapeHtml(yearVal)}</span>`);
+    }
+    if (isEpisode) {
+      metaItems.push(`<span>S${escapeHtml(item.season)} · E${escapeHtml(item.episode)}</span>`);
+    } else {
+      metaItems.push(`<span>${item.type === 'tv' ? 'Series' : 'Movie'}</span>`);
+    }
+    metaContainer.innerHTML = metaItems.join('');
+  }
   document.getElementById('mediaInfoOverview').textContent = item.overview || 'No description available.';
   action.textContent = isEpisode ? 'Play episode' : item.type === 'tv' ? 'Browse seasons' : 'Play now';
   action.onclick = () => {
@@ -375,8 +392,8 @@ async function loadTvShowDetails(tvId, title, year, options) {
     }
   }
   if (typeof switchView === 'function') switchView('tvShow');
-  document.getElementById('tvShowTitle').textContent = title;
-  document.getElementById('tvShowMeta').textContent = `${year ? year + ' · ' : ''}TV Series`;
+  document.getElementById('tvShowTitle').textContent = title || 'Loading series...';
+  document.getElementById('tvShowMeta').textContent = [year, 'TV Series'].filter(Boolean).join(' · ');
   document.getElementById('tvShowFacts').innerHTML = '';
   applySeriesArtwork(state.activeItem && state.activeItem.heroImage);
 
@@ -389,13 +406,30 @@ async function loadTvShowDetails(tvId, title, year, options) {
   try {
     const data = await fetchJson(`/api/tv?id=${tvId}`, `tv:${tvId}`);
     state.tvDetails = data;
+    
+    const resolvedTitle = data.title || title || 'TV Series';
+    const resolvedYear = data.year || year || '';
+
+    document.getElementById('tvShowTitle').textContent = resolvedTitle;
+    document.getElementById('tvShowMeta').textContent = [resolvedYear, data.status || 'TV Series'].filter(Boolean).join(' · ');
+
     if (state.activeItem) {
+      state.activeItem.title = resolvedTitle;
+      state.activeItem.year = resolvedYear;
       state.activeItem.image = state.activeItem.image || data.image;
       state.activeItem.heroImage = state.activeItem.heroImage || data.heroImage;
+    } else {
+      state.activeItem = {
+        id: Number(tvId),
+        type: 'tv',
+        title: resolvedTitle,
+        year: resolvedYear,
+        image: data.image,
+        heroImage: data.heroImage
+      };
     }
     applySeriesArtwork(state.activeItem && state.activeItem.heroImage);
 
-    document.getElementById('tvShowMeta').textContent = [year, data.status].filter(Boolean).join(' · ');
     renderShowFacts(data);
 
     renderSeasonsList(data.seasons || []);
@@ -481,19 +515,23 @@ function renderEpisodesList(episodes) {
   }
 
   episodes.forEach(ep => {
+    const seriesTitle = (state.activeItem && state.activeItem.title && state.activeItem.title !== 'TV Series')
+      ? state.activeItem.title
+      : (state.tvDetails && state.tvDetails.title) || 'Series';
     const episodeItem = {
-      id: state.activeItem.id,
+      id: state.activeItem ? state.activeItem.id : null,
       type: 'tv',
-      title: state.activeItem.title,
+      seriesTitle: seriesTitle,
+      title: seriesTitle,
       displayTitle: ep.name || `Episode ${ep.episode_number}`,
-      year: state.activeItem.year,
+      year: (state.activeItem && state.activeItem.year) || (state.tvDetails && state.tvDetails.year) || (ep.air_date ? ep.air_date.substring(0, 4) : ''),
       season: state.activeSeasonNumber,
       episode: ep.episode_number,
       episodeName: ep.name,
       overview: ep.overview,
       rating: ep.vote_average ? Number(ep.vote_average).toFixed(1) : '',
-      image: state.activeItem.image,
-      heroImage: ep.still_path ? `https://image.tmdb.org/t/p/w1280${ep.still_path}` : state.activeItem.heroImage
+      image: (state.activeItem && state.activeItem.image) || null,
+      heroImage: ep.still_path ? `https://image.tmdb.org/t/p/w1280${ep.still_path}` : ((state.activeItem && state.activeItem.heroImage) || null)
     };
     const btn = document.createElement('button');
     btn.className = 'tv-item';
@@ -520,13 +558,20 @@ function renderEpisodesList(episodes) {
 function renderShowFacts(data) {
   const container = document.getElementById('tvShowFacts');
   if (!container) return;
-  const facts = [
-    `${data.total_seasons} seasons`,
-    `${data.total_episodes} episodes`
-  ];
-  if (data.genres && data.genres.length) facts.push(data.genres.join(' · '));
-  if (data.rating) facts.push(`★ ${data.rating}`);
-  container.innerHTML = facts.map(fact => `<span>${escapeHtml(fact)}</span>`).join('');
+  const facts = [];
+  if (data.rating) {
+    facts.push(`<span class="rating">★ ${escapeHtml(data.rating)}</span>`);
+  }
+  if (data.total_seasons) {
+    facts.push(`<span>${data.total_seasons} ${data.total_seasons === 1 ? 'season' : 'seasons'}</span>`);
+  }
+  if (data.total_episodes) {
+    facts.push(`<span>${data.total_episodes} ${data.total_episodes === 1 ? 'episodes' : 'episodes'}</span>`);
+  }
+  if (data.genres && data.genres.length) {
+    facts.push(`<span>${escapeHtml(data.genres.join(' · '))}</span>`);
+  }
+  container.innerHTML = facts.join('');
 }
 
 function formatEpisodeMeta(episode) {
@@ -540,4 +585,93 @@ function formatEpisodeMeta(episode) {
     }
   }
   return parts.join(' · ');
+}
+
+// ==========================================
+// Device Detection Footer
+// ==========================================
+function detectClientDevice() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const maxTouch = navigator.maxTouchPoints || 0;
+
+  // 1. Smart TV detection
+  const isTv = /VIDAA|Hisense|SmartTV|Tizen|webOS|NetCast|AppleTV|HbbTV|Roku|CrKey|FireTV|AFTT|AFTM|AFTA|Android.*TV/i.test(ua)
+    || typeof window.hisense !== 'undefined'
+    || typeof window.webOS !== 'undefined'
+    || typeof window.tizen !== 'undefined';
+
+  if (isTv) {
+    let tvName = 'Smart TV';
+    if (/VIDAA|Hisense/i.test(ua) || typeof window.hisense !== 'undefined') tvName = 'Smart TV (VIDAA)';
+    else if (/webOS|NetCast/i.test(ua) || typeof window.webOS !== 'undefined') tvName = 'LG Smart TV (webOS)';
+    else if (/Tizen/i.test(ua) || typeof window.tizen !== 'undefined') tvName = 'Samsung Smart TV (Tizen)';
+    else if (/AppleTV/i.test(ua)) tvName = 'Apple TV';
+    else if (/AFT/i.test(ua)) tvName = 'Fire TV';
+    else if (/Roku/i.test(ua)) tvName = 'Roku TV';
+    else if (/Android/i.test(ua)) tvName = 'Android TV';
+    return { type: 'tv', label: tvName, icon: 'tv' };
+  }
+
+  // 2. iPhone / iPad / iOS
+  if (/iPhone/i.test(ua)) {
+    return { type: 'iphone', label: 'iPhone (iOS)', icon: 'phone' };
+  }
+  if (/iPad/i.test(ua) || (platform === 'MacIntel' && maxTouch > 1)) {
+    return { type: 'ipad', label: 'iPad (iPadOS)', icon: 'tablet' };
+  }
+
+  // 3. Android Phone / Tablet
+  if (/Android/i.test(ua)) {
+    const isMobile = /Mobile/i.test(ua);
+    return { 
+      type: 'android', 
+      label: isMobile ? 'Android Phone' : 'Android Tablet', 
+      icon: isMobile ? 'phone' : 'tablet' 
+    };
+  }
+
+  // 4. Mac (MacBook, iMac, Mac mini)
+  if (/Macintosh|MacIntel|MacPPC|Mac68K/i.test(ua) || (platform && platform.startsWith('Mac'))) {
+    return { type: 'mac', label: 'Mac (macOS)', icon: 'laptop' };
+  }
+
+  // 5. Windows PC / Laptop
+  if (/Windows/i.test(ua) || (platform && platform.startsWith('Win'))) {
+    return { type: 'windows', label: 'Windows PC', icon: 'laptop' };
+  }
+
+  // 6. Linux PC
+  if (/Linux/i.test(ua) || (platform && platform.startsWith('Linux'))) {
+    return { type: 'linux', label: 'Linux PC', icon: 'laptop' };
+  }
+
+  // Fallback Desktop
+  return { type: 'desktop', label: 'Laptop / PC', icon: 'laptop' };
+}
+
+function renderFooterDevice() {
+  const pills = document.querySelectorAll('.footer-device-pill');
+  if (!pills.length) return;
+  const device = detectClientDevice();
+  const icons = {
+    tv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>',
+    laptop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M2 20h20"/><path d="M10 16h4"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+    tablet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'
+  };
+
+  pills.forEach(pill => {
+    pill.innerHTML = `
+      <span class="device-dot"></span>
+      <span class="device-icon">${icons[device.icon] || icons.laptop}</span>
+      <span class="device-label">${escapeHtml(device.label)}</span>
+    `;
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderFooterDevice);
+} else {
+  renderFooterDevice();
 }

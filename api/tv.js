@@ -65,6 +65,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({
         id: data.id,
         title: data.name,
+        year: data.first_air_date ? data.first_air_date.substring(0, 4) : (data.release_date ? data.release_date.substring(0, 4) : ''),
         total_seasons: data.number_of_seasons,
         total_episodes: data.number_of_episodes,
         status: data.status || '',

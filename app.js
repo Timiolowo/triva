@@ -163,24 +163,27 @@ function applyRouteFromLocation() {
     return;
   }
 
-  match = path.match(/^\/tv\/(\d+)(?:\/[^/]+)?$/);
+  match = path.match(/^\/tv\/(\d+)(?:\/([^/]+))?$/);
   if (match) {
-    const tvItem = findRouteItem('tv', Number(match[1]));
+    const slugTitle = match[2] ? titleFromSlug(match[2]) : '';
+    const tvItem = findRouteItem('tv', Number(match[1]), null, null, slugTitle);
     state.activeItem = tvItem;
     if (typeof loadTvShowDetails === 'function') loadTvShowDetails(tvItem.id, tvItem.title, tvItem.year, { skipRoute: true });
     return;
   }
 
-  match = path.match(/^\/watch\/tv\/(\d+)\/(\d+)\/(\d+)(?:\/[^/]+)?$/);
+  match = path.match(/^\/watch\/tv\/(\d+)\/(\d+)\/(\d+)(?:\/([^/]+))?$/);
   if (match) {
-    const tvEpisode = findRouteItem('tv', Number(match[1]), Number(match[2]), Number(match[3]));
+    const slugTitle = match[4] ? titleFromSlug(match[4]) : '';
+    const tvEpisode = findRouteItem('tv', Number(match[1]), Number(match[2]), Number(match[3]), slugTitle);
     if (typeof startPlayback === 'function') startPlayback(tvEpisode, { skipRoute: true });
     return;
   }
 
-  match = path.match(/^\/(?:watch\/)?movie\/(\d+)(?:\/[^/]+)?$/);
+  match = path.match(/^\/(?:watch\/)?movie\/(\d+)(?:\/([^/]+))?$/);
   if (match) {
-    const movie = findRouteItem('movie', Number(match[1]));
+    const slugTitle = match[2] ? titleFromSlug(match[2]) : '';
+    const movie = findRouteItem('movie', Number(match[1]), null, null, slugTitle);
     if (typeof startPlayback === 'function') startPlayback(movie, { skipRoute: true });
     return;
   }
@@ -199,7 +202,7 @@ function getQueryParam(name) {
   }
 }
 
-function findRouteItem(type, id, season, episode) {
+function findRouteItem(type, id, season, episode, fallbackTitle) {
   const routeState = window.history && window.history.state;
   if (routeState && routeState.item && routeState.item.type === type && Number(routeState.item.id) === id) {
     return Object.assign({}, routeState.item, season ? { season, episode } : {});
@@ -229,12 +232,20 @@ function findRouteItem(type, id, season, episode) {
   return {
     id,
     type,
-    title: type === 'tv' ? 'TV Series' : 'Movie',
+    title: fallbackTitle || (type === 'tv' ? 'TV Series' : 'Movie'),
     year: '',
     season,
     episode,
     episodeName: episode ? `Episode ${episode}` : ''
   };
+}
+
+function titleFromSlug(slug) {
+  if (!slug) return '';
+  return slug
+    .replace(/[-_]+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function slugifyTitle(title) {

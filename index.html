@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Allura&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css?v=50">
+  <link rel="stylesheet" href="/style.css?v=58">
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
 </head>
 <body>
@@ -70,20 +70,47 @@
             <div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div><div class="featured-card featured-card-skeleton"></div>
           </div>
         </div>
-        <footer class="app-footer"><span>Tivra</span></footer>
+        <footer class="app-footer">
+          <div class="footer-content">
+            <div class="footer-brand">
+              <span class="footer-brand-title">Tivra</span>
+              <span class="footer-separator">•</span>
+              <span class="footer-sub">Ad-Free Player</span>
+            </div>
+            <div class="footer-device-pill" title="Active device optimization">
+              <span class="device-dot"></span>
+              <span class="device-icon"></span>
+              <span class="device-label">Detecting…</span>
+            </div>
+          </div>
+        </footer>
       </section>
 
       <section id="resultsView" class="view-section hidden">
         <div class="view-nav-header"><button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showHomeView()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Home</button><div><h2 id="resultsHeading" class="view-heading">Search results</h2></div></div>
         <div id="resultsList" class="search-results-grid"></div>
+        <footer class="app-footer">
+          <div class="footer-content">
+            <div class="footer-brand">
+              <span class="footer-brand-title">Tivra</span>
+              <span class="footer-separator">•</span>
+              <span class="footer-sub">Ad-Free Player</span>
+            </div>
+            <div class="footer-device-pill" title="Active device optimization">
+              <span class="device-dot"></span>
+              <span class="device-icon"></span>
+              <span class="device-label">Detecting…</span>
+            </div>
+          </div>
+        </footer>
       </section>
 
       <section id="tvShowView" class="view-section hidden">
         <div class="view-nav-header series-view-header">
           <button type="button" class="tv-btn tv-btn-secondary back-btn" onclick="showResultsOrHome()" tabindex="0"><svg viewBox="0 0 24 24" class="svg-icon" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>
           <div class="series-heading-copy">
-            <p class="section-kicker">Series library</p>
-            <div class="show-title-wrap"><h2 id="tvShowTitle" class="view-heading">Series title</h2><span id="tvShowMeta" class="meta-tag">TV series</span></div>
+            <p id="tvShowMeta" class="section-kicker"></p>
+            <h2 id="tvShowTitle" class="view-heading">Series title</h2>
             <div id="tvShowFacts" class="show-facts" aria-label="Series information"></div>
           </div>
         </div>
@@ -91,6 +118,20 @@
           <div class="tv-sidebar"><h3 class="panel-subtitle">Seasons</h3><div id="seasonsList" class="tv-list compact-list"></div></div>
           <div class="tv-main-panel"><h3 id="episodesHeading" class="panel-subtitle">Episodes</h3><div id="episodesList" class="tv-list"></div></div>
         </div>
+        <footer class="app-footer">
+          <div class="footer-content">
+            <div class="footer-brand">
+              <span class="footer-brand-title">Tivra</span>
+              <span class="footer-separator">•</span>
+              <span class="footer-sub">Ad-Free Player</span>
+            </div>
+            <div class="footer-device-pill" title="Active device optimization">
+              <span class="device-dot"></span>
+              <span class="device-icon"></span>
+              <span class="device-label">Detecting…</span>
+            </div>
+          </div>
+        </footer>
       </section>
 
       <section id="playerView" class="view-section player-container hidden">
@@ -413,10 +454,10 @@
     <div id="toastNotification" class="toast hidden" role="status"></div>
   </div>
   <script src="/state.js?v=1"></script>
-  <script src="/content.js?v=5"></script>
+  <script src="/content.js?v=9"></script>
   <script src="/player.js?v=3"></script>
   <script src="/navigation.js?v=1"></script>
-  <script src="/app.js?v=42"></script>
+  <script src="/app.js?v=43"></script>
   <script src="/downloads.js?v=5"></script>
   <script src="/remote.js?v=1"></script>
 </body>
