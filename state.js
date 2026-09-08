@@ -229,7 +229,9 @@ function loadWatchHistory() {
     section.classList.remove('hidden');
     container.innerHTML = '';
 
-    list.forEach(item => {
+    const displayList = list.slice(0, 4);
+
+    displayList.forEach(item => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'continue-watching-card';
