@@ -2,6 +2,19 @@
 // Tivra TV - Video Playback, HLS Engine, Popups, and Player Controls
 // ==========================================================================
 
+function formatEpisodeName(name) {
+  if (!name) return '';
+  name = String(name).trim();
+  const hasLower = /[a-z]/.test(name);
+  const hasUpper = /[A-Z]/.test(name);
+  if (hasLower && hasUpper) return name;
+  const minorWords = /^(a|an|and|as|at|but|by|en|for|if|in|of|on|or|the|to|v[.]?|via|vs[.]?)$/i;
+  return name.toLowerCase().replace(/[A-Za-z0-9]+(?:'[A-Za-z0-9]+)?/g, (match, offset) => {
+    if (offset > 0 && minorWords.test(match)) return match.toLowerCase();
+    return match.charAt(0).toUpperCase() + match.slice(1);
+  });
+}
+
 function startPlayback(item, options) {
   state.activeItem = item;
   state.playerMode = 'native';
@@ -33,7 +46,8 @@ function startPlayback(item, options) {
   if (item.type === 'tv') {
     if (titleEl) titleEl.textContent = item.title;
     if (epTagEl) {
-      epTagEl.textContent = `S${item.season}:E${item.episode}${item.episodeName ? ` "${item.episodeName}"` : ''}`;
+      const epName = formatEpisodeName(item.episodeName);
+      epTagEl.textContent = `S${item.season}:E${item.episode}${epName ? ` "${epName}"` : ''}`;
       epTagEl.classList.remove('hidden');
     }
     const isMobile = window.matchMedia('(max-width: 960px)').matches || window.matchMedia('(pointer: coarse)').matches;
@@ -45,7 +59,7 @@ function startPlayback(item, options) {
       }
     }
   } else {
-    if (titleEl) titleEl.textContent = `${item.title} (${item.year || ''})`;
+    if (titleEl) titleEl.textContent = item.title || '';
     if (epTagEl) epTagEl.classList.add('hidden');
     if (nextEpBtn) nextEpBtn.classList.add('hidden');
   }

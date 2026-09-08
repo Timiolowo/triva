@@ -83,9 +83,21 @@ function closeHeaderSearch() {
   }
   if (trigger) {
     trigger.setAttribute('aria-expanded', 'false');
-    trigger.focus();
+    if (document.activeElement === trigger) {
+      trigger.blur();
+    }
   }
 }
+
+document.addEventListener('click', (e) => {
+  const header = document.querySelector('.app-header');
+  if (header && header.classList.contains('search-open')) {
+    const searchArea = document.querySelector('.header-search-area');
+    if (searchArea && !searchArea.contains(e.target)) {
+      closeHeaderSearch();
+    }
+  }
+});
 
 async function handleSearchSubmit(options) {
   const input = document.getElementById('searchInput');
@@ -220,19 +232,27 @@ function setupHeroSpotlight(item) {
 
 function filterCategory(cat) {
   state.currentCategoryFilter = cat;
+  if (state.currentView !== 'home' && typeof showHomeView === 'function') {
+    showHomeView();
+  }
   const tabs = document.querySelectorAll('.header-nav .nav-tab');
   let activeTab = null;
-  const label = cat === 'all' ? 'home' : cat;
+  const label = cat === 'all' ? 'home' : (cat === 'tv' ? 'series' : cat);
   for (let index = 0; index < tabs.length; index += 1) {
     tabs[index].classList.remove('active');
-    if (tabs[index].textContent.toLowerCase().indexOf(label) !== -1) activeTab = tabs[index];
+    const tabCat = tabs[index].getAttribute('data-category');
+    if (tabCat ? tabCat === cat : tabs[index].textContent.toLowerCase().indexOf(label) !== -1) {
+      activeTab = tabs[index];
+    }
   }
   if (activeTab) activeTab.classList.add('active');
 
   const heading = document.getElementById('sectionHeading');
-  if (cat === 'movie') heading.textContent = 'Trending movies today';
-  else if (cat === 'tv') heading.textContent = 'Trending series today';
-  else heading.textContent = 'Trending today';
+  if (heading) {
+    if (cat === 'movie') heading.textContent = 'Trending movies today';
+    else if (cat === 'tv') heading.textContent = 'Trending series today';
+    else heading.textContent = 'Trending today';
+  }
 
   renderFilteredTrending();
 }
