@@ -22,6 +22,10 @@ function startPlayback(item, options) {
   state.availableLevels = [];
   state.activeSubtitleId = 'off';
   state.subtitleOffset = 0;
+  const offsetDisplay = document.getElementById('subtitleOffsetDisplay');
+  if (offsetDisplay) offsetDisplay.textContent = '0.0s';
+  const offsetInput = document.getElementById('subtitleOffsetCustomInput');
+  if (offsetInput) offsetInput.value = '';
   state.playbackSpeed = 1.0;
   state.videoFit = 'contain';
   state.drawerOpen = false;
@@ -1086,11 +1090,16 @@ function setSubtitleWeight(weight, silent = false) {
 }
 
 function adjustSubtitleOffset(delta, isReset = false) {
+  let effectiveDelta = delta;
   if (isReset) {
+    effectiveDelta = -(state.subtitleOffset || 0);
     state.subtitleOffset = 0;
   } else {
-    state.subtitleOffset += delta;
+    state.subtitleOffset = (state.subtitleOffset || 0) + delta;
   }
+
+  // Round to 1 decimal place to prevent floating point inaccuracies
+  state.subtitleOffset = Math.round(state.subtitleOffset * 10) / 10;
 
   const display = document.getElementById('subtitleOffsetDisplay');
   if (display) {
@@ -1098,22 +1107,35 @@ function adjustSubtitleOffset(delta, isReset = false) {
     display.textContent = `${sign}${state.subtitleOffset.toFixed(1)}s`;
   }
 
+  const offsetInput = document.getElementById('subtitleOffsetCustomInput');
+  if (offsetInput && document.activeElement !== offsetInput) {
+    offsetInput.value = state.subtitleOffset !== 0 ? state.subtitleOffset : '';
+  }
+
   const video = document.getElementById('nativeVideoPlayer');
-  if (video && video.textTracks) {
+  if (video && video.textTracks && effectiveDelta !== 0) {
     for (let i = 0; i < video.textTracks.length; i++) {
       const cues = video.textTracks[i].cues;
       if (cues) {
         for (let j = 0; j < cues.length; j++) {
-          if (!isReset) {
-            cues[j].startTime += delta;
-            cues[j].endTime += delta;
-          }
+          cues[j].startTime += effectiveDelta;
+          cues[j].endTime += effectiveDelta;
         }
       }
     }
   }
 
   showPlayerAction(SVG_ICONS.subtitles, `Sub Sync: ${state.subtitleOffset.toFixed(1)}s`);
+}
+
+function setSubtitleOffsetExplicit(targetValue) {
+  const target = parseFloat(targetValue);
+  if (isNaN(target)) return;
+  const current = state.subtitleOffset || 0;
+  const delta = target - current;
+  if (Math.abs(delta) > 0.001) {
+    adjustSubtitleOffset(delta);
+  }
 }
 
 // ==========================================

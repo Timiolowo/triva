@@ -2713,21 +2713,54 @@ video::cue {
 .sync-offset-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .sync-offset-row .tv-btn {
-  font-weight: normal;
+  font-weight: 500;
+  padding: 6px 9px;
+  font-size: 13px;
+  min-width: 44px;
 }
 
 .offset-display {
-  font-size: 15px;
-  font-weight: normal;
+  font-size: 14px;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
-  min-width: 50px;
+  min-width: 48px;
   text-align: center;
   color: var(--accent);
+}
+
+.sync-custom-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.sub-offset-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.sub-offset-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sync-custom-input-row .tv-btn {
+  padding: 6px 14px;
+  font-size: 13px;
 }
 
 .iframe-wrapper,

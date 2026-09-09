@@ -569,13 +569,25 @@
 
               <div class="drawer-section-title" style="margin-top: 18px;">Subtitle Timing Offset</div>
               <div class="sync-offset-row">
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(-5)"
+                  title="-5.0s" tabindex="0">-5s</button>
                 <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(-0.5)"
-                  tabindex="0">-0.5s</button>
+                  title="-0.5s" tabindex="0">-0.5s</button>
                 <span id="subtitleOffsetDisplay" class="offset-display">0.0s</span>
                 <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(0.5)"
-                  tabindex="0">+0.5s</button>
+                  title="+0.5s" tabindex="0">+0.5s</button>
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary" onclick="adjustSubtitleOffset(5)"
+                  title="+5.0s" tabindex="0">+5s</button>
                 <button type="button" class="tv-btn tv-btn-sm tv-btn-quiet" onclick="adjustSubtitleOffset(0, true)"
                   tabindex="0">Reset</button>
+              </div>
+              <div class="sync-custom-input-row">
+                <input type="number" id="subtitleOffsetCustomInput" class="sub-offset-input"
+                  placeholder="Type seconds (e.g. 15, -8.5)" step="0.5" tabindex="0"
+                  onkeydown="if (event.key === 'Enter') { event.preventDefault(); setSubtitleOffsetExplicit(this.value); this.blur(); }">
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary"
+                  onclick="setSubtitleOffsetExplicit(document.getElementById('subtitleOffsetCustomInput').value)"
+                  tabindex="0">Set</button>
               </div>
             </div>
           </div>
