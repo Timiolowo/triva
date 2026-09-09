@@ -582,12 +582,15 @@
                   tabindex="0">Reset</button>
               </div>
               <div class="sync-custom-input-row">
+                <button type="button" id="subOffsetSignToggle" class="tv-btn tv-btn-sm tv-btn-secondary sub-sign-btn sign-positive"
+                  onclick="toggleSubtitleOffsetSign()" title="Click to toggle + Later or − Earlier" tabindex="0">
+                  <span id="subOffsetSignIcon">+</span> Later
+                </button>
                 <input type="number" id="subtitleOffsetCustomInput" class="sub-offset-input"
-                  placeholder="Type seconds (e.g. 15, -8.5)" step="0.5" tabindex="0"
-                  onkeydown="if (event.key === 'Enter') { event.preventDefault(); setSubtitleOffsetExplicit(this.value); this.blur(); }">
-                <button type="button" class="tv-btn tv-btn-sm tv-btn-secondary"
-                  onclick="setSubtitleOffsetExplicit(document.getElementById('subtitleOffsetCustomInput').value)"
-                  tabindex="0">Set</button>
+                  placeholder="Seconds (e.g. 15)" step="0.5" min="0" inputmode="decimal" tabindex="0"
+                  onkeydown="if (event.key === 'Enter') { event.preventDefault(); applyCustomSubtitleOffset(); this.blur(); }">
+                <button type="button" class="tv-btn tv-btn-sm tv-btn-primary"
+                  onclick="applyCustomSubtitleOffset()" tabindex="0">Set</button>
               </div>
             </div>
           </div>

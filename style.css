@@ -2763,6 +2763,30 @@ video::cue {
   font-size: 13px;
 }
 
+.sub-sign-btn {
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  padding: 6px 12px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sub-sign-btn.sign-positive {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.sub-sign-btn.sign-negative {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+}
+
 .iframe-wrapper,
 .iframe-wrapper iframe {
   width: 100%;

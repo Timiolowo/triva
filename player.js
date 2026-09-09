@@ -1089,17 +1089,58 @@ function setSubtitleWeight(weight, silent = false) {
   }
 }
 
+let subtitleOffsetSign = 1;
+
+function updateSubOffsetSignUI() {
+  const btn = document.getElementById('subOffsetSignToggle');
+  if (!btn) return;
+  if (subtitleOffsetSign === 1) {
+    btn.innerHTML = '<span id="subOffsetSignIcon">+</span> Later';
+    btn.classList.remove('sign-negative');
+    btn.classList.add('sign-positive');
+  } else {
+    btn.innerHTML = '<span id="subOffsetSignIcon">−</span> Earlier';
+    btn.classList.remove('sign-positive');
+    btn.classList.add('sign-negative');
+  }
+}
+
+function toggleSubtitleOffsetSign() {
+  subtitleOffsetSign = subtitleOffsetSign === 1 ? -1 : 1;
+  updateSubOffsetSignUI();
+}
+
+function applyCustomSubtitleOffset() {
+  const input = document.getElementById('subtitleOffsetCustomInput');
+  if (!input) return;
+  const raw = String(input.value || '').trim();
+  if (!raw) return;
+  const val = parseFloat(raw);
+  if (isNaN(val)) return;
+
+  const finalVal = raw.startsWith('-') ? -Math.abs(val) : Math.abs(val) * subtitleOffsetSign;
+  setSubtitleOffsetExplicit(finalVal);
+}
+
 function adjustSubtitleOffset(delta, isReset = false) {
   let effectiveDelta = delta;
   if (isReset) {
     effectiveDelta = -(state.subtitleOffset || 0);
     state.subtitleOffset = 0;
+    subtitleOffsetSign = 1;
   } else {
     state.subtitleOffset = (state.subtitleOffset || 0) + delta;
   }
 
   // Round to 1 decimal place to prevent floating point inaccuracies
   state.subtitleOffset = Math.round(state.subtitleOffset * 10) / 10;
+
+  if (state.subtitleOffset < 0) {
+    subtitleOffsetSign = -1;
+  } else if (state.subtitleOffset > 0) {
+    subtitleOffsetSign = 1;
+  }
+  updateSubOffsetSignUI();
 
   const display = document.getElementById('subtitleOffsetDisplay');
   if (display) {
@@ -1109,7 +1150,7 @@ function adjustSubtitleOffset(delta, isReset = false) {
 
   const offsetInput = document.getElementById('subtitleOffsetCustomInput');
   if (offsetInput && document.activeElement !== offsetInput) {
-    offsetInput.value = state.subtitleOffset !== 0 ? state.subtitleOffset : '';
+    offsetInput.value = state.subtitleOffset !== 0 ? Math.abs(state.subtitleOffset) : '';
   }
 
   const video = document.getElementById('nativeVideoPlayer');
